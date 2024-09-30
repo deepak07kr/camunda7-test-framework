@@ -1,0 +1,39 @@
+---
+spring:
+  application:
+    name: Camunda Integration Test
+  main:
+    banner-mode: "off"
+  servlet:
+    multipart:
+      enabled: false
+  datasource:
+    url: jdbc:tc:postgresql:16.4-alpine:///db
+    hikari:
+      schema: public
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+server:
+  port: ${desired.port}
+  servlet:
+    context-path: /test
+
+---
+camunda:
+  bpm:
+    client:
+      base-url: http://localhost:${desired.port}/test/engine-rest
+    database:
+      type: postgres
+      schema-update: true
+      schema-name: ${spring.datasource.hikari.schema}
+      table-prefix: ${spring.datasource.hikari.schema}.
+    filter:
+      create: All tasks
+    generic-properties:
+      properties:
+        telemetry-reporter-activate: false
+        historyTimeToLive: P30D
