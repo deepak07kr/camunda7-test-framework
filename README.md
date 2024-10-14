@@ -108,3 +108,5 @@ By using the `ReceiveTaskHelper`, you can easily simulate the behavior of asynch
 
 ### 1.0.0
 - Initial Version
+### 1.0.1
+- Updates Camunda to 7.22.0 together with related libraries.
