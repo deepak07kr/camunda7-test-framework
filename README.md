@@ -31,7 +31,6 @@ Add this test dependency to your project:
  <dependency> 
    <groupId>com.pia.commons</groupId> 
    <artifactId>camunda-7-test-framework</artifactId> 
-   <version>1.0.0</version>
    <scope>test</scope>
  </dependency> 
  ``` 
@@ -49,6 +48,7 @@ The library provides an abstract base class named BaseBpmIT, which already adds 
 Below is a simple example of how to use the helper in your integration tests:
 
  ```java 
+import com.pia.camunda.test.helper.ReceiveTaskHelper;
 import java.util.Map;
 import java.util.UUID;
 
@@ -61,22 +61,41 @@ class ReceiveTaskHelperTest extends BaseBpmIT {
   private static final ReceiveTaskHelper RECEIVE_TASK_HELPER = ReceiveTaskHelper.getInstance();
 
   @Test
-  void testMyProcess() {
-    // Prepare your mock server expectations as per your requirements
+  void testMyBpmnFlow_withDefaultStartVariables_finishesSuccessfully() {
+    // Prepare mock server expectations for your flow
     setupYourMockServerExpectations();
-    
+
     // Register your task variables for your receive tasks
-    RECEIVE_TASK_HELPER.register(RECEIVE_TASK_ID, MESSAGE_NAME, prepareReceiveTaskVariables());
+    ReceiveTaskHelper.getInstance().
+            register("myTaskId", "myMessageName", Map.of("status", "success"));
 
     // Use the library method to start the process
-    ProcessInstance instance = startProcessInstance(PDK_SAMPLE_BPMN_FLOW);
+    ProcessInstance instance = startProcessInstance("myProcessDefinitionKey",
+            Map.of("orderId", "1", "orderItemId", "1"));
 
     // Use the library method to assert the process is ended successfully 
     assertProcessEnded(instance);
   }
-  
-  private void setupYourMockServerExpectations(){
-      // Setup your mockserver expectations
+
+  @Test
+  void testMyBpmnFlow_withFailedWaitTask_createsIncident() {
+    // Prepare mock server expectations for your flow
+    setupYourMockServerExpectations();
+
+    // Register your task variables for your receive tasks
+    ReceiveTaskHelper.getInstance()
+            .register("myTaskId", "myMessageName", Map.of("status", "failed"));
+
+    // Use the library method to start the process
+    ProcessInstance instance = startProcessInstance("myProcessDefinitionKey",
+            Map.of("orderId", "1", "orderItemId", "1"));
+
+    // Use the library method to assert the process is ended successfully 
+    assertIncidentCreated(instance, "Wait task status is failed");
+  }
+
+  private void setupYourMockServerExpectations() {
+    // Setup your mockserver expectations
   }
 
   // Example of preparing variable map
@@ -110,3 +129,6 @@ By using the `ReceiveTaskHelper`, you can easily simulate the behavior of asynch
 - Initial Version
 ### 1.0.1
 - Updates Camunda to 7.22.0 together with related libraries.
+### 1.0.2
+- Updates Spring Boot to 3.4.0
+- Updates Camunda Incident Logger to 1.0.2
