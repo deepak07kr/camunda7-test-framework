@@ -1,10 +1,9 @@
 package com.pia.camunda.test.helper;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The ReceiveTaskExpectations class is a data class that encapsulates the necessary information for
@@ -16,10 +15,9 @@ import java.util.Map;
  */
 @Getter
 @Setter
-public class ReceiveTaskExpectations {
+public class ServiceTaskExpectations {
 
-  private String receiveTaskId;
+  private String taskId;
   private Map<String, Object> variableMap = new HashMap<>();
-  private String correlateMessage;
   private Runnable runnable;
 }

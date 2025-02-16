@@ -17,5 +17,5 @@ import org.springframework.context.annotation.Import;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import(ReceiveTaskParseListenerPluginSelector.class)
-public @interface EnableReceiveTaskListenerPlugin {}
+@Import(BpmnTaskParseListenerPluginSelector.class)
+public @interface EnableBpmnTaskListenerPlugin {}

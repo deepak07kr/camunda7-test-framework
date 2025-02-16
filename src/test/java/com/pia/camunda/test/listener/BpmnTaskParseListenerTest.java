@@ -13,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ReceiveTaskParseListenerTest {
+class BpmnTaskParseListenerTest {
 
     @Mock
     private Element userTaskElement;
@@ -24,18 +24,18 @@ class ReceiveTaskParseListenerTest {
     @Mock
     private ActivityImpl activity;
 
-    private ReceiveTaskParseListener receiveTaskParseListener;
+    private BpmnTaskParseListener bpmnTaskParseListener;
 
     @BeforeEach
     void setUp() {
-        receiveTaskParseListener = new ReceiveTaskParseListener();
+        bpmnTaskParseListener = new BpmnTaskParseListener();
     }
 
     @Test
     void parseReceiveTaskTest() {
         when(activity.getId()).thenReturn("activityId");
 
-        receiveTaskParseListener.parseReceiveTask(userTaskElement, scope, activity);
+        bpmnTaskParseListener.parseReceiveTask(userTaskElement, scope, activity);
 
         verify(activity, times(1)).addListener(eq(ExecutionListener.EVENTNAME_START), any(ReceiveTaskListener.class));
     }

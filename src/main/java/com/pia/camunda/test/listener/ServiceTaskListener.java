@@ -1,7 +1,8 @@
 package com.pia.camunda.test.listener;
 
-import com.pia.camunda.test.helper.ReceiveTaskHelper;
-import com.pia.camunda.test.helper.ReceiveTaskExecutionHelper;
+import com.pia.camunda.test.helper.ServiceTaskExpectations;
+import com.pia.camunda.test.helper.ServiceTaskHelper;
+import java.util.Objects;
 import lombok.Getter;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
@@ -13,7 +14,7 @@ import org.camunda.bpm.engine.delegate.ExecutionListener;
  * @author Yusuf Bozkurt
  */
 @Getter
-public class ReceiveTaskListener implements ExecutionListener {
+public class ServiceTaskListener implements ExecutionListener {
 
   /**
    * Method invoked when an execution event occurs. It fetches the helper object for the execution's
@@ -23,10 +24,17 @@ public class ReceiveTaskListener implements ExecutionListener {
    */
   @Override
   public void notify(DelegateExecution execution) {
-    var receiveTaskHelper = ReceiveTaskHelper.getInstance();
-    ReceiveTaskExecutionHelper executionHelper =
-        receiveTaskHelper.getReceiveTaskExecutionHelperMap().get(execution.getCurrentActivityId());
-    executionHelper.setProcessInstanceId(execution.getProcessInstanceId());
-    executionHelper.getAtomicBoolean().set(true);
+    var helper = ServiceTaskHelper.getInstance();
+    ServiceTaskExpectations expectations = helper.getExpectation(execution.getCurrentActivityId());
+
+    if (Objects.nonNull(expectations)) {
+      if (!expectations.getVariableMap().isEmpty()) {
+        execution.setVariables(expectations.getVariableMap());
+      }
+
+      if (Objects.nonNull(expectations.getRunnable())) {
+        expectations.getRunnable().run();
+      }
+    }
   }
 }

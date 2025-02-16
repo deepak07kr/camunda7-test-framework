@@ -3,13 +3,12 @@ package com.pia.camunda.test.integration;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.pia.camunda.test.configuration.EnableReceiveTaskListenerPlugin;
-import com.pia.camunda.test.helper.ReceiveTaskHelper;
 import com.pia.camunda.IncidentLoggerPlugin;
+import com.pia.camunda.test.configuration.EnableBpmnTaskListenerPlugin;
+import com.pia.camunda.test.helper.ReceiveTaskHelper;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.engine.RuntimeService;
@@ -30,7 +29,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Yusuf BOZKURT
  */
-@EnableReceiveTaskListenerPlugin
+@EnableBpmnTaskListenerPlugin
 @Import(IncidentLoggerPlugin.class)
 public abstract class BaseBpmIT implements BpmIT {
 
@@ -44,7 +43,7 @@ public abstract class BaseBpmIT implements BpmIT {
   }
 
   protected final ProcessDefinition validateDeployment(String processDefinitionKey) {
-    ProcessDefinition processDefinition =
+    var processDefinition =
         repositoryService
             .createProcessDefinitionQuery()
             .latestVersion()
@@ -60,7 +59,7 @@ public abstract class BaseBpmIT implements BpmIT {
 
   protected final ProcessInstance startProcessInstance(
       String processDefinitionKey, Map<String, Object> startProcessVariables) {
-    ProcessInstance processInstance =
+    var processInstance =
         runtimeService.startProcessInstanceByKey(processDefinitionKey, startProcessVariables);
     ReceiveTaskHelper.getInstance().run();
     return processInstance;
@@ -118,8 +117,8 @@ public abstract class BaseBpmIT implements BpmIT {
                         .createIncidentQuery()
                         .incidentId(incident.getRootCauseIncidentId())
                         .singleResult())
-            .collect(Collectors.toList());
+            .toList();
 
-    return Stream.concat(incidents.stream(), rootIncidents.stream()).collect(Collectors.toList());
+    return Stream.concat(incidents.stream(), rootIncidents.stream()).toList();
   }
 }
