@@ -35,5 +35,4 @@ camunda:
       create: All tasks
     generic-properties:
       properties:
-        telemetry-reporter-activate: false
         historyTimeToLive: P30D
