@@ -11,6 +11,7 @@ import lombok.Getter;
  *
  * @author Yusuf BOZKURT
  */
+@Deprecated
 @Getter
 public class ServiceTaskHelper {
 

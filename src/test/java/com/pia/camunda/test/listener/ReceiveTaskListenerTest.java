@@ -32,12 +32,12 @@ class ReceiveTaskListenerTest {
         String activityId = "activityId";
         String processInstanceId = "processInstanceId";
 
-        ReceiveTaskHelper receiveTaskHelper = ReceiveTaskHelper.getInstance();
+        ReceiveTaskHelper receiveTaskMonitor = ReceiveTaskHelper.getInstance();
         ReceiveTaskExecutionHelper executionHelper = new ReceiveTaskExecutionHelper();
         executionHelper.setReceiveTaskId(activityId);
         executionHelper.setProcessInstanceId(processInstanceId);
         executionHelper.setAtomicBoolean(new AtomicBoolean(false));
-        receiveTaskHelper.getReceiveTaskExecutionHelperMap().put(activityId, executionHelper);
+        receiveTaskMonitor.getReceiveTaskExecutionHelperMap().put(activityId, executionHelper);
 
         when(delegateExecution.getCurrentActivityId()).thenReturn(activityId);
         when(delegateExecution.getProcessInstanceId()).thenReturn(processInstanceId);

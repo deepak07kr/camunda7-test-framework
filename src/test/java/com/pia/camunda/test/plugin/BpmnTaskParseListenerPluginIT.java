@@ -1,12 +1,12 @@
 package com.pia.camunda.test.plugin;
 
+import static com.pia.camunda.test.util.CamundaExpectationUtil.createReceiveTaskExpectation;
+import static com.pia.camunda.test.util.CamundaExpectationUtil.createTaskExpectation;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS;
 
 import com.pia.camunda.test.context.CustomManagement;
 import com.pia.camunda.test.context.CustomManagementRepository;
-import com.pia.camunda.test.helper.ReceiveTaskHelper;
-import com.pia.camunda.test.helper.ServiceTaskHelper;
 import com.pia.camunda.test.integration.BaseBpmIT;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,17 +21,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 
 /**
- * Integration tests for the {@link BpmnTaskListenerPlugin ReceiveTaskParseListenerPlugin}
- * class. This class tests the behavior of the plugin when it is enabled and the BPMN process is
- * started. The tests simulate the process start, the registration of receive tasks, and the
- * completion of the process. The BPMN process used in these tests is defined in the
- * WF_Sample_WaitInvocation.bpmn file. It contains two receive tasks and sends a message at the end
- * of each task.
+ * Integration tests for the {@link BpmnTaskListenerPlugin ReceiveTaskParseListenerPlugin} class.
+ * This class tests the behavior of the plugin when it is enabled and the BPMN process is started.
+ * The tests simulate the process start, the registration of receive tasks, and the completion of
+ * the process. The BPMN process used in these tests is defined in the WF_Sample_WaitInvocation.bpmn
+ * file. It contains two receive tasks and sends a message at the end of each task.
  *
  * @author Yusuf Bozkurt
  */
 @Sql(scripts = "classpath:db/create-table.sql", executionPhase = BEFORE_TEST_CLASS)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, properties = "desired.port=8999")
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+    properties = "desired.port=8999")
 class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
 
   private static final String PDK_WF_SAMPLE_WAIT_INVOCATION = "WF_Sample_WaitInvocation";
@@ -40,12 +41,7 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   private static final String TASK_ID_SERVICE_TASK_EXPECTATION = "service_task_expectation";
   private static final String MESSAGE_RECEIVE_TASK = "job-sub-process-completed";
 
-  private static final ReceiveTaskHelper RECEIVE_TASK_HELPER = ReceiveTaskHelper.getInstance();
-  private static final ServiceTaskHelper SERVICE_TASK_HELPER = ServiceTaskHelper.getInstance();
-
-  @Autowired
-  private CustomManagementRepository repository;
-
+  @Autowired private CustomManagementRepository repository;
 
   @Test
   void testBpmnFileDeployment_withValidBpmnDefinitions_deploySuccessfully() {
@@ -60,14 +56,18 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   @Test
   void testBpmnProcessStart_withReceiveTaskValidExpectations_waitingNextStep() {
     // Given
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_BEFORE, MESSAGE_RECEIVE_TASK, getWaitStateBeforeVariableMap());
+
+    createReceiveTaskExpectation()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(getWaitStateBeforeVariableMap())
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
     // When
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
 
     // Then
-    RECEIVE_TASK_HELPER.assertWaiting(TASK_ID_WAIT_STATE_AFTER);
+    assertProcessWaiting(instance, TASK_ID_WAIT_STATE_AFTER);
     assertNotNull(instance);
   }
 
@@ -78,10 +78,17 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   @Test
   void testBpmnProcessStart_withReceiveTaskValidExpectations_completedProcess() {
     // Given
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_BEFORE, MESSAGE_RECEIVE_TASK, getWaitStateBeforeVariableMap());
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_AFTER, MESSAGE_RECEIVE_TASK, getWaitStateAfterVariableMap(true));
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+            .withVariableMap(getWaitStateBeforeVariableMap())
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
+
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+            .withVariableMap(getWaitStateAfterVariableMap(true))
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
 
     // When
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
@@ -92,16 +99,22 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
 
   @Test
   void testBpmnProcessStart_withoutExpectedOutputVariable_throwsProcessEngineException() {
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_BEFORE, MESSAGE_RECEIVE_TASK, getWaitStateBeforeMistakeVariableMap());
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+            .withVariableMap(getWaitStateBeforeMistakeVariableMap())
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
     Assertions.assertThrows(
         ProcessEngineException.class, () -> startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION));
   }
 
   @Test
   void testBpmnProcessStart_withUnxpectedOutputVariableValue_createsIncident() {
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_BEFORE, MESSAGE_RECEIVE_TASK, Map.of("status", "unexpected"));
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+            .withVariableMap(Map.of("status", "unexpected"))
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
     assertIncidentCreated(instance);
   }
@@ -110,28 +123,47 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   void
       testBpmnProcessStart_withReceiveTaskValidExpectationsAndIsFinalStateIsFalse_ProcessWaitingAfterState() {
     // Given
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_BEFORE, MESSAGE_RECEIVE_TASK, getWaitStateBeforeVariableMap());
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_AFTER, MESSAGE_RECEIVE_TASK, getWaitStateAfterVariableMap(false));
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+            .withVariableMap(getWaitStateBeforeVariableMap())
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
+
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+            .withVariableMap(getWaitStateAfterVariableMap(false))
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
+
 
     // When
-    startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
+    var instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
 
     // Then
-    RECEIVE_TASK_HELPER.assertWaiting(TASK_ID_WAIT_STATE_AFTER);
+    assertProcessWaiting(instance, TASK_ID_WAIT_STATE_AFTER);
   }
 
   @Test
   void
       testBpmnProcessStart_withReceiveTaskValidExpectationsAndIsFinalStateIsFalseAfterThatItIsTrue_CompletedProcess() {
     // Given
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_BEFORE, MESSAGE_RECEIVE_TASK, getWaitStateBeforeVariableMap());
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_AFTER, MESSAGE_RECEIVE_TASK, getWaitStateAfterVariableMap(false));
-    RECEIVE_TASK_HELPER.register(
-        TASK_ID_WAIT_STATE_AFTER, MESSAGE_RECEIVE_TASK, getWaitStateAfterVariableMap(true));
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+            .withVariableMap(getWaitStateBeforeVariableMap())
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
+
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+            .withVariableMap(getWaitStateAfterVariableMap(false))
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
+
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+            .withVariableMap(getWaitStateAfterVariableMap(true))
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
 
     // When
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
@@ -144,12 +176,23 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   void testBpmnProcessStart_withServiceTaskListener_CompletedProcess() {
     String entityId = UUID.randomUUID().toString();
     // Given
-    RECEIVE_TASK_HELPER.register(
-            TASK_ID_WAIT_STATE_BEFORE, MESSAGE_RECEIVE_TASK, getWaitStateBeforeVariableMap("expectation"));
-    SERVICE_TASK_HELPER.register(
-        TASK_ID_SERVICE_TASK_EXPECTATION, () -> repository.saveAndFlush(getEntity(entityId, "acknowledge")), Map.of("entityId", entityId));
-    RECEIVE_TASK_HELPER.register(
-            TASK_ID_WAIT_STATE_AFTER, MESSAGE_RECEIVE_TASK, getWaitStateAfterVariableMap(true));
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+            .withVariableMap(getWaitStateBeforeVariableMap("expectation"))
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
+
+    createTaskExpectation()
+            .withTaskId(TASK_ID_SERVICE_TASK_EXPECTATION)
+            .withVariableMap(Map.of("entityId", entityId))
+            .withRunnable(() -> repository.saveAndFlush(getEntity(entityId, "acknowledge")))
+            .create();
+
+    createReceiveTaskExpectation()
+            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+            .withVariableMap(getWaitStateAfterVariableMap(true))
+            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+            .create();
 
     // When
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);

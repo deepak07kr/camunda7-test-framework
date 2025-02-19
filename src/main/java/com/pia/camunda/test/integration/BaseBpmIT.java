@@ -5,9 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.pia.camunda.IncidentLoggerPlugin;
 import com.pia.camunda.test.configuration.EnableBpmnTaskListenerPlugin;
-import com.pia.camunda.test.helper.ReceiveTaskHelper;
+import com.pia.camunda.test.helper.ReceiveTaskManager;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.camunda.bpm.engine.RepositoryService;
@@ -61,7 +62,7 @@ public abstract class BaseBpmIT implements BpmIT {
       String processDefinitionKey, Map<String, Object> startProcessVariables) {
     var processInstance =
         runtimeService.startProcessInstanceByKey(processDefinitionKey, startProcessVariables);
-    ReceiveTaskHelper.getInstance().run();
+    ReceiveTaskManager.getInstance().runAll();
     return processInstance;
   }
 
@@ -76,6 +77,15 @@ public abstract class BaseBpmIT implements BpmIT {
                         .processInstanceId(instance.getId())
                         .singleResult()
                     == null);
+  }
+
+  protected final void assertProcessWaiting(ProcessInstance processInstance, String taskId) {
+    await("Await_isWaiting")
+        .pollInterval(500, TimeUnit.MILLISECONDS)
+        .atMost(60, TimeUnit.SECONDS)
+        .until(() -> isProcessWaiting(processInstance, taskId));
+
+    BpmnAwareTests.assertThat(processInstance).isWaitingAt(taskId);
   }
 
   protected final void assertIncidentCreated(
@@ -120,5 +130,18 @@ public abstract class BaseBpmIT implements BpmIT {
             .toList();
 
     return Stream.concat(incidents.stream(), rootIncidents.stream()).toList();
+  }
+
+  private boolean isProcessWaiting(ProcessInstance processInstance, String taskId) {
+    List<ProcessInstance> processInstances =
+        BpmnAwareTests.runtimeService().createProcessInstanceQuery().activityIdIn(taskId).list();
+
+    if (!processInstances.isEmpty()) {
+      return processInstances.stream()
+          .anyMatch(
+              instance ->
+                      Objects.equals(instance.getProcessInstanceId(), processInstance.getProcessInstanceId()));
+    }
+    return false;
   }
 }

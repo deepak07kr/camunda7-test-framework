@@ -12,6 +12,7 @@ import org.camunda.bpm.engine.delegate.ExecutionListener;
  *
  * @author Yusuf Bozkurt
  */
+@Deprecated
 @Getter
 public class ReceiveTaskListener implements ExecutionListener {
 

@@ -1,7 +1,6 @@
 package com.pia.camunda.test.listener;
 
-import com.pia.camunda.test.helper.ReceiveTaskExecutionHelper;
-import com.pia.camunda.test.helper.ReceiveTaskHelper;
+import com.pia.camunda.test.helper.ReceiveTaskManager;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.impl.bpmn.parser.AbstractBpmnParseListener;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
@@ -27,19 +26,15 @@ public class BpmnTaskParseListener extends AbstractBpmnParseListener {
    */
   @Override
   public void parseReceiveTask(Element userTaskElement, ScopeImpl scope, ActivityImpl activity) {
-    var listener = new ReceiveTaskListener();
+    var listener = new CustomTaskExecutionListener();
     activity.addListener(ExecutionListener.EVENTNAME_START, listener);
-
-    var receiveTaskHelper = ReceiveTaskHelper.getInstance();
-    var executionHelper = new ReceiveTaskExecutionHelper();
-    executionHelper.setReceiveTaskId(activity.getId());
-    executionHelper.getAtomicBoolean().set(false);
-    receiveTaskHelper.getReceiveTaskExecutionHelperMap().put(activity.getId(), executionHelper);
+    ReceiveTaskManager.getInstance().registerReceiveTask(activity.getId());
   }
 
   @Override
   public void parseServiceTask(Element serviceTaskElement, ScopeImpl scope, ActivityImpl activity) {
-    var listener = new ServiceTaskListener();
+    var listener = new CustomTaskExecutionListener();
     activity.addListener(ExecutionListener.EVENTNAME_START, listener);
+    activity.addListener(ExecutionListener.EVENTNAME_END, listener);
   }
 }

@@ -13,6 +13,7 @@ import lombok.Setter;
  *
  * @author Yusuf BOZKURT
  */
+@Deprecated
 @Getter
 @Setter
 public class ServiceTaskExpectations {

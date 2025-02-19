@@ -17,6 +17,7 @@ import static org.awaitility.Awaitility.await;
  *
  * @author Yusuf BOZKURT
  */
+@Deprecated
 @Getter
 public class ReceiveTaskHelper {
 

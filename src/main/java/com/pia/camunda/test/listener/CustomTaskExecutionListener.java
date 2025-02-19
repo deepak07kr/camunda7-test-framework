@@ -1,8 +1,8 @@
 package com.pia.camunda.test.listener;
 
-import com.pia.camunda.test.helper.ServiceTaskExpectations;
-import com.pia.camunda.test.helper.ServiceTaskHelper;
 import java.util.Objects;
+
+import com.pia.camunda.test.helper.TaskExecutionRegistry;
 import lombok.Getter;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
@@ -14,7 +14,7 @@ import org.camunda.bpm.engine.delegate.ExecutionListener;
  * @author Yusuf Bozkurt
  */
 @Getter
-public class ServiceTaskListener implements ExecutionListener {
+public class CustomTaskExecutionListener implements ExecutionListener {
 
   /**
    * Method invoked when an execution event occurs. It fetches the helper object for the execution's
@@ -24,17 +24,10 @@ public class ServiceTaskListener implements ExecutionListener {
    */
   @Override
   public void notify(DelegateExecution execution) {
-    var helper = ServiceTaskHelper.getInstance();
-    ServiceTaskExpectations expectations = helper.getExpectation(execution.getCurrentActivityId());
-
-    if (Objects.nonNull(expectations)) {
-      if (!expectations.getVariableMap().isEmpty()) {
-        execution.setVariables(expectations.getVariableMap());
-      }
-
-      if (Objects.nonNull(expectations.getRunnable())) {
-        expectations.getRunnable().run();
-      }
+    var taskExpectation =
+        TaskExecutionRegistry.getInstance().poll(execution.getCurrentActivityId(), execution.getEventName());
+    if (Objects.nonNull(taskExpectation)) {
+      taskExpectation.execute(execution);
     }
   }
 }
