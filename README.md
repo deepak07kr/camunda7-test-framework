@@ -48,7 +48,7 @@ The library provides an abstract base class named BaseBpmIT, which already adds 
 Below is a simple example of how to use the helper in your integration tests:
 
  ```java 
-import com.pia.camunda.test.helper.ReceiveTaskHelper;
+
 
 import java.util.Map;
 import java.util.UUID;

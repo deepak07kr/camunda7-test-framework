@@ -12,7 +12,8 @@ public class TaskExpectationBuilderImpl
 
   @Override
   public TaskExpectationBuilder withEventType(EventType eventType) {
-    return null;
+    this.eventType = eventType;
+    return this;
   }
 
   @Override

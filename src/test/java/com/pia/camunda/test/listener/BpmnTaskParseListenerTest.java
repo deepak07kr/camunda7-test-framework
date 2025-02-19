@@ -1,5 +1,7 @@
 package com.pia.camunda.test.listener;
 
+import static org.mockito.Mockito.*;
+
 import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
@@ -9,8 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BpmnTaskParseListenerTest {
@@ -37,6 +37,17 @@ class BpmnTaskParseListenerTest {
 
         bpmnTaskParseListener.parseReceiveTask(userTaskElement, scope, activity);
 
-        verify(activity, times(1)).addListener(eq(ExecutionListener.EVENTNAME_START), any(ReceiveTaskListener.class));
-    }
+    verify(activity, times(1))
+        .addListener(eq(ExecutionListener.EVENTNAME_START), any(CustomTaskExecutionListener.class));
+  }
+
+  @Test
+  void parseServiceTaskTest() {
+    bpmnTaskParseListener.parseServiceTask(userTaskElement, scope, activity);
+
+    verify(activity, times(1))
+        .addListener(eq(ExecutionListener.EVENTNAME_START), any(CustomTaskExecutionListener.class));
+    verify(activity, times(1))
+        .addListener(eq(ExecutionListener.EVENTNAME_END), any(CustomTaskExecutionListener.class));
+  }
 }

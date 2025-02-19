@@ -13,37 +13,42 @@ import org.camunda.bpm.engine.test.assertions.bpmn.BpmnAwareTests;
 import org.springframework.util.CollectionUtils;
 
 /**
+ * The {@code ReceiveTaskManager} class is designed to manage and process "Receive Tasks" in a
+ * workflow system such as Camunda BPM. It employs the Singleton Design Pattern to ensure a single
+ * instance of this manager is used throughout the application. This class allows for the
+ * registration, tracking, and execution of such tasks in a thread-safe and efficient manner.
  *
- *
- * <h1>ReceiveTaskManager</h1>
- *
- * <p>A high-level manager (Singleton) that tracks and processes "Receive Task" expectations in a
- * Camunda-based BPMN flow. This class:
- *
- * <ul>
- *   <li>Maintains a FIFO queue of Receive Task IDs to be processed.
- *   <li>Maps each Task ID to a queue of {@link ReceiveTaskExpectations}.
- *   <li>Keeps a {@link ReceiveTaskContext} for each Task ID with state like {@link
- *       ReceiveTaskExecutionHelper} and an {@code AtomicBoolean}.
- *   <li>Provides {@link #runAll()} to process tasks in order, waiting for them to be active and
- *       then correlating or running their logic.
- *   <li>Offers {@link #assertWaiting(String)} for verification in test scenarios.
- * </ul>
- *
- * <p><b>Thread Safety:</b> Uses {@link ConcurrentHashMap} and {@link ConcurrentLinkedQueue} to
- * handle concurrent access. If you have only single-thread usage, it still works fine.
- *
- * <p><b>Potential Enhancements:</b>
+ * <p>Core Features:
  *
  * <ul>
- *   <li>Scheduling periodic checks with a thread pool or {@code ScheduledExecutorService}.
- *   <li>Paralel işlem (multi-thread) ile her Receive Task ID'yi farklı iş parçacığında ele almak.
- *   <li>More advanced matching or filtering logic before correlation.
+ *   <li>Manages a queue of receive tasks to be processed in FIFO order.
+ *   <li>Tracks task contexts, including execution readiness and process-instance association.
+ *   <li>Handles task-related expectations, including message correlations and custom runnables.
  * </ul>
  *
- * @author -- Original code by: You -- High-level refactoring & commentary by: ChatGPT
+ * <p>Usage Example:
+ *
+ * <pre>
+ * ReceiveTaskManager manager = ReceiveTaskManager.getInstance();
+ * manager.registerReceiveTask("task1");
+ * manager.enqueueExpectation("task1", new ReceiveTaskExpectations("message", variables));
+ * manager.informReceiveTask("task1", "processInstance1");
+ * manager.runAll();
+ * </pre>
+ *
+ * <p>This class is thread-safe and ensures that tasks and their associated expectations are
+ * processed correctly. It leverages concurrent data structures to allow safe multi-threaded
+ * operations.
+ *
+ * <p>Thread safety and collection handling are achieved using Java's concurrent utilities.
+ *
+ * @see ConcurrentLinkedQueue
+ * @see ConcurrentHashMap
+ * @see ReceiveTaskExecutionHelper
+ * @author Yusuf BOZKURT
  */
 @Slf4j
+@Getter
 public class ReceiveTaskManager {
 
   private ReceiveTaskManager() {}
@@ -60,23 +65,16 @@ public class ReceiveTaskManager {
     return InstanceHolder.instance;
   }
 
-  /**
-   * Wraps necessary context for a Receive Task:
-   *
-   * <ul>
-   *   <li>The {@link ReceiveTaskExecutionHelper} (holding atomic boolean and processInstanceId)
-   *   <li>Any extra metadata we might need (timestamps, states, etc.)
-   * </ul>
-   */
-  @Getter
-  private static class ReceiveTaskContext {
-    private final ReceiveTaskExecutionHelper executionHelper;
-
-    ReceiveTaskContext(String taskId) {
-      this.executionHelper = new ReceiveTaskExecutionHelper();
-      this.executionHelper.setReceiveTaskId(taskId);
-      this.executionHelper.getAtomicBoolean().set(false);
-    }
+  public void clear() {
+    receiveTaskOrder.clear();
+    taskExpectationsMap.clear();
+    taskContextMap
+        .values()
+        .forEach(
+            (ReceiveTaskContext ctx) -> {
+              ctx.getExecutionHelper().getAtomicBoolean().set(false);
+              ctx.getExecutionHelper().setProcessInstanceId(null);
+            });
   }
 
   /** FIFO queue that tracks which receive task IDs are due to be processed by {@link #runAll()}. */
@@ -158,41 +156,8 @@ public class ReceiveTaskManager {
   }
 
   /**
-   * Asserts that the process is indeed waiting at the given task ID. Useful in test scenarios, then
-   * it deletes the process instance for cleanup.
-   *
-   * @param receiveTaskId the ID of the receive task
-   */
-  public void assertWaiting(String receiveTaskId) {
-    ReceiveTaskContext context = taskContextMap.get(receiveTaskId);
-    if (context == null) {
-      throw new IllegalStateException("No context found for receiveTaskId=" + receiveTaskId);
-    }
-
-    await("waitingForTaskId[" + receiveTaskId + "]")
-        .atMost(60, TimeUnit.SECONDS)
-        .until(() -> isTaskCurrentlyWaiting(context));
-
-    ProcessInstance processInstance =
-        BpmnAwareTests.runtimeService()
-            .createProcessInstanceQuery()
-            .processInstanceId(context.getExecutionHelper().getProcessInstanceId())
-            .singleResult();
-
-    BpmnAwareTests.assertThat(processInstance).isWaitingAt(receiveTaskId);
-
-    // Cleanup: remove the process instance
-    BpmnAwareTests.runtimeService()
-        .deleteProcessInstance(
-            context.getExecutionHelper().getProcessInstanceId(),
-            "Test finished, cleaning up process instance");
-
-    log.info("Asserted waiting for taskId={}, then deleted its process instance.", receiveTaskId);
-  }
-
-  /**
-   * Processes the expectations for a given task by verifying the task's state,
-   * retrieving expectations, and executing the corresponding logic.
+   * Processes the expectations for a given task by verifying the task's state, retrieving
+   * expectations, and executing the corresponding logic.
    *
    * @param taskId Identifier for the task whose expectations are to be processed.
    */
@@ -224,6 +189,25 @@ public class ReceiveTaskManager {
       doRunRunnableExpectation(taskId, expectation);
     } else {
       doMessageCorrelation(taskId, expectation);
+    }
+  }
+
+  /**
+   * Wraps necessary context for a Receive Task:
+   *
+   * <ul>
+   *   <li>The {@link ReceiveTaskExecutionHelper} (holding atomic boolean and processInstanceId)
+   *   <li>Any extra metadata we might need (timestamps, states, etc.)
+   * </ul>
+   */
+  @Getter
+  public static class ReceiveTaskContext {
+    private final ReceiveTaskExecutionHelper executionHelper;
+
+    ReceiveTaskContext(String taskId) {
+      this.executionHelper = new ReceiveTaskExecutionHelper();
+      this.executionHelper.setReceiveTaskId(taskId);
+      this.executionHelper.getAtomicBoolean().set(false);
     }
   }
 

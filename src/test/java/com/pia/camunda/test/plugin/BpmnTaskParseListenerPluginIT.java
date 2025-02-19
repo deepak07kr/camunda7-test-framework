@@ -1,7 +1,7 @@
 package com.pia.camunda.test.plugin;
 
-import static com.pia.camunda.test.util.CamundaExpectationUtil.createReceiveTaskExpectation;
-import static com.pia.camunda.test.util.CamundaExpectationUtil.createTaskExpectation;
+import static com.pia.camunda.test.util.CamundaExpectationUtil.registerReceiveTaskExecutionListener;
+import static com.pia.camunda.test.util.CamundaExpectationUtil.registerTaskExecutionListener;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_CLASS;
 
@@ -57,7 +57,7 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   void testBpmnProcessStart_withReceiveTaskValidExpectations_waitingNextStep() {
     // Given
 
-    createReceiveTaskExpectation()
+    registerReceiveTaskExecutionListener()
         .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
         .withVariableMap(getWaitStateBeforeVariableMap())
         .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
@@ -78,17 +78,17 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   @Test
   void testBpmnProcessStart_withReceiveTaskValidExpectations_completedProcess() {
     // Given
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
-            .withVariableMap(getWaitStateBeforeVariableMap())
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(getWaitStateBeforeVariableMap())
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
-            .withVariableMap(getWaitStateAfterVariableMap(true))
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+        .withVariableMap(getWaitStateAfterVariableMap(true))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
     // When
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
@@ -99,22 +99,22 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
 
   @Test
   void testBpmnProcessStart_withoutExpectedOutputVariable_throwsProcessEngineException() {
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
-            .withVariableMap(getWaitStateBeforeMistakeVariableMap())
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(getWaitStateBeforeMistakeVariableMap())
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
     Assertions.assertThrows(
         ProcessEngineException.class, () -> startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION));
   }
 
   @Test
   void testBpmnProcessStart_withUnxpectedOutputVariableValue_createsIncident() {
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
-            .withVariableMap(Map.of("status", "unexpected"))
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(Map.of("status", "unexpected"))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
     assertIncidentCreated(instance);
   }
@@ -123,18 +123,17 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   void
       testBpmnProcessStart_withReceiveTaskValidExpectationsAndIsFinalStateIsFalse_ProcessWaitingAfterState() {
     // Given
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
-            .withVariableMap(getWaitStateBeforeVariableMap())
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(getWaitStateBeforeVariableMap())
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
-            .withVariableMap(getWaitStateAfterVariableMap(false))
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
-
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+        .withVariableMap(getWaitStateAfterVariableMap(false))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
     // When
     var instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
@@ -147,23 +146,23 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   void
       testBpmnProcessStart_withReceiveTaskValidExpectationsAndIsFinalStateIsFalseAfterThatItIsTrue_CompletedProcess() {
     // Given
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
-            .withVariableMap(getWaitStateBeforeVariableMap())
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(getWaitStateBeforeVariableMap())
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
-            .withVariableMap(getWaitStateAfterVariableMap(false))
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+        .withVariableMap(getWaitStateAfterVariableMap(false))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
-            .withVariableMap(getWaitStateAfterVariableMap(true))
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+        .withVariableMap(getWaitStateAfterVariableMap(true))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
     // When
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
@@ -176,29 +175,50 @@ class BpmnTaskParseListenerPluginIT extends BaseBpmIT {
   void testBpmnProcessStart_withServiceTaskListener_CompletedProcess() {
     String entityId = UUID.randomUUID().toString();
     // Given
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
-            .withVariableMap(getWaitStateBeforeVariableMap("expectation"))
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(getWaitStateBeforeVariableMap("expectation"))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
-    createTaskExpectation()
-            .withTaskId(TASK_ID_SERVICE_TASK_EXPECTATION)
-            .withVariableMap(Map.of("entityId", entityId))
-            .withRunnable(() -> repository.saveAndFlush(getEntity(entityId, "acknowledge")))
-            .create();
+    registerTaskExecutionListener()
+        .withTaskId(TASK_ID_SERVICE_TASK_EXPECTATION)
+        .withVariableMap(Map.of("entityId", entityId))
+        .withRunnable(() -> repository.saveAndFlush(getEntity(entityId, "acknowledge")))
+        .create();
 
-    createReceiveTaskExpectation()
-            .withTaskId(TASK_ID_WAIT_STATE_AFTER)
-            .withVariableMap(getWaitStateAfterVariableMap(true))
-            .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
-            .create();
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_AFTER)
+        .withVariableMap(getWaitStateAfterVariableMap(true))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
 
     // When
     ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
 
     // Then
     assertProcessEnded(instance);
+  }
+
+  @Test
+  void testBpmnProcessStart_withRegisterInvalidReceiveTaskId_doNothing() {
+    // Given
+    registerReceiveTaskExecutionListener()
+        .withTaskId(TASK_ID_WAIT_STATE_BEFORE)
+        .withVariableMap(getWaitStateBeforeVariableMap())
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
+
+    registerReceiveTaskExecutionListener()
+        .withTaskId("INVALID_TASK_ID")
+        .withVariableMap(getWaitStateBeforeVariableMap("expectation"))
+        .withCorrelationMessage(MESSAGE_RECEIVE_TASK)
+        .create();
+
+    // When
+    ProcessInstance instance = startProcessInstance(PDK_WF_SAMPLE_WAIT_INVOCATION);
+
+    assertProcessWaiting(instance, TASK_ID_WAIT_STATE_AFTER);
   }
 
   private CustomManagement getEntity(String id, String status) {
