@@ -1,22 +1,22 @@
 package com.pia.camunda.test.plugin;
 
-import com.pia.camunda.test.listener.ReceiveTaskParseListener;
+import com.pia.camunda.test.listener.BpmnTaskParseListener;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParseListener;
 import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * The ReceiveTaskParseListenerPlugin class is a Camunda Process Engine plugin
- * that add custom listener {@link ReceiveTaskParseListener ReceiveTaskParseListener} to the list of parse listeners.
+ * that add custom listener {@link BpmnTaskParseListener ReceiveTaskParseListener} to the list of parse listeners.
  *
  * @author Yusuf Bozkurt
  */
 @Component
-public class ReceiveTaskParseListenerPlugin extends AbstractProcessEnginePlugin {
+public class BpmnTaskListenerPlugin extends AbstractProcessEnginePlugin {
 
   /**
    * This method is called during the construction of the ProcessEngineConfiguration (Pre-Initialization phase).
@@ -31,6 +31,6 @@ public class ReceiveTaskParseListenerPlugin extends AbstractProcessEnginePlugin 
       preParseListeners = new ArrayList<>();
       processEngineConfiguration.setCustomPreBPMNParseListeners(preParseListeners);
     }
-    preParseListeners.add(new ReceiveTaskParseListener());
+    preParseListeners.add(new BpmnTaskParseListener());
   }
 }

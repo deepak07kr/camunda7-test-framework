@@ -1,77 +1,98 @@
-# Camunda Integration Test Framework
+# Camunda-7 Test Framework
 
-Receive Task Helper is a powerful auxiliary tool that simplifies the testing of BPMN processes on the Camunda BPM Platform. It offers a straightforward and effective way of handling Receive Tasks in your integration tests.
+The BPMNs contain logic in decision trees and in scripts, but not only that, they contain mandatory information on which input and/or output variables are expected before and after each task. There can be numerous combinations how a BPMN flow can continue depending on what sort of variables is set within the task implementations. 
 
-## Table of Contents
+Before deploying a BPMN to the Camunda-7 server, it is essential to test the BPMN flows with all possible combinations of expectations, input and output variables so that we can be sure that the flow will work as expected in the production environment.
 
-- [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-- [Usage](#usage)
-    - [Annotation](#annotation)
-    - [Example Test](#example-test)
-- [Overview of Key Classes](#overview-of-key-classes)
+Writing integration tests for the BPMN flows have always been a challenge. There is no straightforward way to perform tests for the BPMN flows. However, Camunda-7 platform contain a large set of APIs which makes it possible to write integration tests with the help of an embedded Camunda-7 server in test classpath.
 
-## Getting Started
+Our Camunda-7 Test Framework makes it very easy to write an integration test for Camunda-7 BPM platform through intelligent use of its API. What it does briefly is:
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+- When the Spring Boot context is being initialized, it parses the BPMN files and silently registers listeners for each task.
+- These listeners are just placeholders which does nothing, just lets the flow continue.
+- In your test class, you have the ability to register your own listeners for each task.
+- These registrations essentially are not real task listeners, but they are just adding lambdas to the already registered but initially empty set of tasks to be executed. They can be used to add some behavior to the flow, like setting variables, doing DB inserts, creating incidents etc.
+- A special sort of registration is also available for receive tasks. You can register a receive-task with a correlation message name and a variable map to set so that the flow will automatically continue.
+- After each test, these registrations will be removed implicitly, so that other tests can start with a clean state.
+- A flow is started by supplying an initial set of workflow variables.
+- Before a flow is started, you should provide your expectations for each task. An expectation can be a mock-server expectation or providing some initial data in a database table. 
+- Useful methods to assert whether the test is successful or failed are provided and should be used in the final stage of the test method.
 
-### Prerequisites
-
-This project is an add-on for the Camunda BPM Platform. Therefore, what you will need are:
-
-- Java 17 or higher
-- Maven
-- An existing microservice with Camunda BPM flow implementation.
-
-### Installation
-Add this test dependency to your project:
-
- ```xml 
- <dependency> 
-   <groupId>com.pia.commons</groupId> 
-   <artifactId>camunda-7-test-framework</artifactId> 
-   <scope>test</scope>
- </dependency> 
- ``` 
+> **Note:** The embedded Camunda-7 server configured by the library to be used in the tests is completely identical with the pia-camunda-7 server project. 
 
 ## Usage
 
-### Annotation
+Add this test dependency to your project:
 
-To use the helper in your tests, annotate your test class with `@EnableReceiveTaskListenerPlugin`. This enables the `ReceiveTaskParseListenerPlugin` during tests.
+### Maven Dependency
 
-The library provides an abstract base class named BaseBpmIT, which already adds this annotation. 
+ ```xml 
+
+<dependency>
+  <groupId>com.pia.commons</groupId>
+  <artifactId>camunda-7-test-framework</artifactId>
+  <scope>test</scope>
+</dependency> 
+ ``` 
+
+### Use `@EnableBpmnTaskListenerPlugin`
+
+This annotation causes the library to parse the BPMNs when the Spring Boot context is being prepared, enabling all the magic.
+
+### Alternative: Extend `BaseBpmIT`
+
+The library provides an abstract base class named BaseBpmIT, which already adds the `@EnableBpmnTaskListenerPlugin` annotation.
 
 ### Example Test
 
 Below is a simple example of how to use the helper in your integration tests:
 
  ```java 
-import com.pia.camunda.test.helper.ReceiveTaskHelper;
 import java.util.Map;
 import java.util.UUID;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class ReceiveTaskHelperTest extends BaseBpmIT {
+import com.pia.camunda.test.model.EventType;
 
-  private static final String RECEIVE_TASK_ID = "myTaskId";
+import static com.pia.camunda.test.util.CamundaExpectationUtil.registerReceiveTaskExecutionListener;
+import static com.pia.camunda.test.util.CamundaExpectationUtil.registerTaskExecutionListener;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+class MyBpmFlowIT extends BaseBpmIT {
+
+  private static final String TASK_ID_RECEIVE_TASK = "myReceiveTaskId";
+  private static final String TASK_ID_SERVICE_TASK = "myServiceTaskId";
   private static final String MESSAGE_NAME = "myMessageName";
   private static final String PDK_SAMPLE_BPMN_FLOW = "processDefinitionKey";
-  private static final ReceiveTaskHelper RECEIVE_TASK_HELPER = ReceiveTaskHelper.getInstance();
 
   @Test
   void testMyBpmnFlow_withDefaultStartVariables_finishesSuccessfully() {
     // Prepare mock server expectations for your flow
     setupYourMockServerExpectations();
+    String entityId = UUID.randomUUID().toString();
 
-    // Register your task variables for your receive tasks
-    ReceiveTaskHelper.getInstance().
-            register("myTaskId", "myMessageName", Map.of("status", "success"));
+    // Register task variables and correlation message for receive tasks
+    registerReceiveTaskExecutionListener()
+            .withTaskId(TASK_ID_RECEIVE_TASK)
+            .withVariableMap(Map.of("status", "success"))
+            .withCorrelationMessage(MESSAGE_NAME)
+            .create();
+
+    // Register a runnable to be executed before the task starts
+    registerTaskExecutionListener()
+            .withEventType(EventType.START)
+            .withTaskId(TASK_ID_SERVICE_TASK)
+            .withRunnable(() -> repository.saveAndFlush(getEntity(entityId, "acknowledge")))
+            .create();
+
+    // Register variables to be set after the task ends
+    registerTaskExecutionListener()
+            .withEventType(EventType.END)
+            .withTaskId(TASK_ID_SERVICE_TASK)
+            .withVariableMap(Map.of("entityId", entityId))
+            .create();
 
     // Use the library method to start the process
-    ProcessInstance instance = startProcessInstance("myProcessDefinitionKey",
-            Map.of("orderId", "1", "orderItemId", "1"));
+    ProcessInstance instance = startProcessInstance(PDK_SAMPLE_BPMN_FLOW, Map.of("orderId", "1", "orderItemId", "1"));
 
     // Use the library method to assert the process is ended successfully 
     assertProcessEnded(instance);
@@ -113,22 +134,39 @@ class ReceiveTaskHelperTest extends BaseBpmIT {
 } 
  ``` 
 
-## Overview of Key Classes
+### Overview of Key Classes
 
 Here is a brief overview of the main classes used in the helper:
 
-- `EnableReceiveTaskListenerPlugin`: This annotation activates the `ReceiveTaskParseListenerPlugin` during tests.
-- `ReceiveTaskParseListenerPlugin`: This class is the main entry point of the helper. It listens to parsing events of BPMN processes and adds a listener to each Receive Task.
-- `ReceiveTaskHelper`: This singleton class provides a method to register the expectation of a Receive Task.
+- `@EnableBpmnTaskListenerPlugin`: This annotation activates the `BpmnTaskListenerPlugin` during tests.
+- `BpmnTaskParseListener`: This class is the main entry point of the helper. It listens to parsing events of
+  BPMN processes and adds a listener to each Receive Task, Service Task, ExclusiveGateway etc. .
+- `TaskExecutionRegistry`: This singleton class provides a method to register the expectation of a All Task.
+- `ReceiveTaskManager` : This class is responsible for managing the expectations of Receive Tasks.
+- `CamundaExpectationUtil` : This class provides utility methods to register the expectations of tasks.
 
-By using the `ReceiveTaskHelper`, you can easily simulate the behavior of asynchronous service tasks and message tasks in your tests.
+By using the `TaskExecutionRegistry`, you can easily simulate the behavior of asynchronous service tasks and message
+tasks
+in your tests.
 
 ## Version History
 
 ### 1.0.0
+
 - Initial Version
+
 ### 1.0.1
+
 - Updates Camunda to 7.22.0 together with related libraries.
+
 ### 1.0.2
+
 - Updates Spring Boot to 3.4.0
 - Updates Camunda Incident Logger to 1.0.2
+
+### 1.0.3 (Backward Incompatible)
+- Updates Spring Boot to 3.4.2
+- Adds Custom Task Execution Listener for all tasks.
+- Adds `TaskExecution` interface to execute the expectation of all tasks.
+- Adds new methods to the `CamundaExpectationUtil` class.
+- Adds new Class `TaskExecutionRegistry` to manage the expectations of all tasks.
