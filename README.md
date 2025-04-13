@@ -1,4 +1,4 @@
-# Camunda-7 Test Framework
+# Camunda7 Test Framework
 
 The BPMNs contain logic in decision trees and in scripts, but not only that, they contain mandatory information on which input and/or output variables are expected before and after each task. There can be numerous combinations how a BPMN flow can continue depending on what sort of variables is set within the task implementations. 
 
@@ -18,22 +18,34 @@ Our Camunda-7 Test Framework makes it very easy to write an integration test for
 - Before a flow is started, you should provide your expectations for each task. An expectation can be a mock-server expectation or providing some initial data in a database table. 
 - Useful methods to assert whether the test is successful or failed are provided and should be used in the final stage of the test method.
 
-> **Note:** The embedded Camunda-7 server configured by the library to be used in the tests is completely identical with the pia-camunda-7 server project. 
+> **Note:** The embedded Camunda7 server configured by the library to be used in the tests is completely identical with the `camunda7-openid-microservice` opentmf server project. 
 
 ## Usage
 
 Add this test dependency to your project:
 
 ### Maven Dependency
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.opentmf</groupId>
+      <artifactId>opentmf-versions</artifactId>
+      <type>pom</type>
+      <scope>import</scope>
+      <version>RELEASE</version>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
 
- ```xml 
-
+```xml 
 <dependency>
-  <groupId>com.pia.commons</groupId>
-  <artifactId>camunda-7-test-framework</artifactId>
+  <groupId>org.opentmf.camunda</groupId>
+  <artifactId>camunda7-test-framework</artifactId>
   <scope>test</scope>
 </dependency> 
- ``` 
+``` 
 
 ### Use `@EnableBpmnTaskListenerPlugin`
 
@@ -51,10 +63,10 @@ Below is a simple example of how to use the helper in your integration tests:
 import java.util.Map;
 import java.util.UUID;
 
-import com.pia.camunda.test.model.EventType;
+import org.opentmf.camunda.test.model.EventType;
 
-import static com.pia.camunda.test.util.CamundaExpectationUtil.registerReceiveTaskExecutionListener;
-import static com.pia.camunda.test.util.CamundaExpectationUtil.registerTaskExecutionListener;
+import static org.opentmf.camunda.test.util.CamundaExpectationUtil.registerReceiveTaskExecutionListener;
+import static org.opentmf.camunda.test.util.CamundaExpectationUtil.registerTaskExecutionListener;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class MyBpmFlowIT extends BaseBpmIT {
@@ -92,7 +104,8 @@ class MyBpmFlowIT extends BaseBpmIT {
             .create();
 
     // Use the library method to start the process
-    ProcessInstance instance = startProcessInstance(PDK_SAMPLE_BPMN_FLOW, Map.of("orderId", "1", "orderItemId", "1"));
+    ProcessInstance instance = startProcessInstance(PDK_SAMPLE_BPMN_FLOW,
+            Map.of("orderId", "1", "orderItemId", "1"));
 
     // Use the library method to assert the process is ended successfully 
     assertProcessEnded(instance);
@@ -152,15 +165,12 @@ in your tests.
 ## Version History
 
 ### 1.0.0
-
 - Initial Version
 
 ### 1.0.1
-
 - Updates Camunda to 7.22.0 together with related libraries.
 
 ### 1.0.2
-
 - Updates Spring Boot to 3.4.0
 - Updates Camunda Incident Logger to 1.0.2
 
@@ -170,3 +180,9 @@ in your tests.
 - Adds `TaskExecution` interface to execute the expectation of all tasks.
 - Adds new methods to the `CamundaExpectationUtil` class.
 - Adds new Class `TaskExecutionRegistry` to manage the expectations of all tasks.
+
+### 1.0.4
+- Updates Spring Boot to 3.4.4
+- Updates Camunda to 7.23.0
+- Updates Camunda Incident Logger to 1.0.3
+- Initial open source version
