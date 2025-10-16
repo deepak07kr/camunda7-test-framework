@@ -186,3 +186,9 @@ in your tests.
 - Updates Camunda to 7.23.0
 - Updates Camunda Incident Logger to 1.0.3
 - Initial open source version
+
+### 1.0.5
+- Updates Spring Boot to 3.5.6
+- Updates Camunda to 7.24.0
+- Updates Camunda Incident Logger to 1.0.4
+
