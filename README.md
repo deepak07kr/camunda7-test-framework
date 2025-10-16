@@ -158,9 +158,57 @@ Here is a brief overview of the main classes used in the helper:
 - `ReceiveTaskManager` : This class is responsible for managing the expectations of Receive Tasks.
 - `CamundaExpectationUtil` : This class provides utility methods to register the expectations of tasks.
 
-By using the `TaskExecutionRegistry`, you can easily simulate the behavior of asynchronous service tasks and message
-tasks
-in your tests.
+By using the `TaskExecutionRegistry`, you can easily simulate the behavior of asynchronous service tasks and message tasks in your tests.
+
+### Recommended Application Context
+If you are using this library, most probably your application is an external Camunda Client, and most probably you are dependent on some set of BPMNs and your application deploys the BPMNs to Camunda 7 on startup with the help of [camunda7-bpmn-sync-service](https://github.com/opentmf/camunda7-bpmn-sync-service). So, your aim is to test the BPMN flows in certain IT tests, but maybe you want to disable Camunda 7 engine to be up and running in other IT tests.
+
+What can you do?
+
+Let's consider the following two application configurations:
+
+#### application-it.yml
+Let this one be the base application configuration for your IT tests. You can specify the following Camunda related settings:
+
+```yaml
+# starting with Camunda 7.24, this exclude became necessary
+spring:
+  autoconfigure:
+    exclude:
+    - org.camunda.bpm.spring.boot.starter.rest.CamundaBpmRestJerseyAutoConfiguration
+
+camunda:
+  bpm:
+    enabled: false
+    client:
+      disable-auto-fetching: true
+```
+
+And your IT tests that exclude Camunda 7 Embedded engine should provide at least:
+
+`@ActiveProfiles("it")`
+
+#### application-camunda.yaml
+
+This one should be specified in `@ActiveProfiles` section where you want to run Camunda BPMN IT tests.
+
+```yaml
+spring:
+  autoconfigure:
+    exclude: []
+
+camunda:
+  bpm:
+    enabled: true
+    client:
+      baseUrl: ....
+```
+
+And your IT tests that must use this library should provide at least:
+
+`@ActiveProfiles({"it", "camunda"})`
+
+The latter profile settings will override the configuration that was set in the previous profiles.
 
 ## Version History
 
@@ -192,3 +240,6 @@ in your tests.
 - Updates Camunda to 7.24.0
 - Updates Camunda Incident Logger to 1.0.4
 
+### 1.0.6
+- Updates Documentation
+- Specifies `legacyJobRetryBehaviorEnabled=true` property in test scope

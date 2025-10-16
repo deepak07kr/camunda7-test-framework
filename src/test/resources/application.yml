@@ -36,3 +36,4 @@ camunda:
     generic-properties:
       properties:
         historyTimeToLive: P30D
+        legacyJobRetryBehaviorEnabled: true
