@@ -60,6 +60,7 @@
     <awaitility.version>4.2.0</awaitility.version>
     <archunit.version>1.4.1</archunit.version>
     <testcontainers.version>1.21.3</testcontainers.version>
+    <junit-jupiter.version>5.12.2</junit-jupiter.version>
 
     <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
     <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
@@ -83,8 +84,8 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <artifactId>spring-boot-starter-parent</artifactId>
         <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
         <scope>import</scope>
         <type>pom</type>
         <version>${spring-boot.version}</version>
@@ -92,6 +93,7 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
+        <version>${junit-jupiter.version}</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
