@@ -9,9 +9,10 @@ import org.opentmf.camunda.test.helper.TaskExecutionRegistry;
 
 /**
  * Utility class that simplifies the registration of task execution listeners for Camunda BPM tasks.
- * It provides entry points to configure and register listeners for both user tasks and receive
- * tasks using a fluent builder pattern. This class enables streamlined task execution customization
- * within Camunda processes, aiding in managing task-specific behavior efficiently.
+ * It provides entry points to configure and register listeners for both user tasks and
+ * message-waiting elements using a fluent builder pattern. This class enables streamlined task
+ * execution customization within Camunda processes, aiding in managing task-specific behavior
+ * efficiently.
  *
  * <p>Since this class only provides static utility methods, it is not meant to be instantiated. All
  * interactions should occur through its static methods.
@@ -30,9 +31,10 @@ import org.opentmf.camunda.test.helper.TaskExecutionRegistry;
  *     .withVariableMap(Map.of("key", "value"))
  *     .create();
  *
- * // Register a receive task execution listener
- * CamundaExpectationUtil.registerReceiveTaskExecutionListener()
- *     .withTaskId("receiveTaskId")
+ * // Register a message catch execution listener (supports Receive Task,
+ * // Message Intermediate Catch Event, and Boundary Message Event)
+ * CamundaExpectationUtil.registerMessageCatchExecutionListener()
+ *     .withTaskId("messageCatchElementId")
  *     .withCorrelationMessage("correlationMessage")
  *     .withVariableMap(Map.of())
  *     .create();
@@ -59,13 +61,36 @@ public class CamundaExpectationUtil {
   }
 
   /**
+   * Registers an execution listener for message-waiting BPMN elements in Camunda BPM. This method
+   * returns a `ReceiveTaskExpectationBuilder` instance to configure the listener with specific
+   * attributes.
+   *
+   * <p>Supported BPMN element types:
+   *
+   * <ul>
+   *   <li>Receive Task
+   *   <li>Message Intermediate Catch Event
+   *   <li>Boundary Message Event
+   * </ul>
+   *
+   * @return a new `ReceiveTaskExpectationBuilder` instance to configure the listener
+   */
+  public static ReceiveTaskExpectationBuilder registerMessageCatchExecutionListener() {
+    return new ReceiveTaskExpectationBuilderImpl();
+  }
+
+  /**
    * Registers a task execution listener for receive tasks in Camunda BPM. This method returns a
    * `ReceiveTaskExpectationBuilder` instance to configure the task listener with specific
    * attributes.
    *
    * @return a new `ReceiveTaskExpectationBuilder` instance to configure the task listener
+   * @deprecated Use {@link #registerMessageCatchExecutionListener()} instead. This method is kept
+   *     for backward compatibility but the new method name better reflects the supported element
+   *     types (Receive Task, Message Intermediate Catch Event, Boundary Message Event).
    */
+  @Deprecated
   public static ReceiveTaskExpectationBuilder registerReceiveTaskExecutionListener() {
-    return new ReceiveTaskExpectationBuilderImpl();
+    return registerMessageCatchExecutionListener();
   }
 }

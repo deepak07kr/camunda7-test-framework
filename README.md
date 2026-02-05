@@ -65,8 +65,8 @@ import java.util.UUID;
 
 import org.opentmf.camunda.test.model.EventType;
 
-import static org.opentmf.camunda.test.util.CamundaExpectationUtil.registerReceiveTaskExecutionListener;
 import static org.opentmf.camunda.test.util.CamundaExpectationUtil.registerTaskExecutionListener;
+import static org.opentmf.camunda.test.util.CamundaExpectationUtil.registerMessageCatchExecutionListener;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class MyBpmFlowIT extends BaseBpmIT {
@@ -83,7 +83,7 @@ class MyBpmFlowIT extends BaseBpmIT {
     String entityId = UUID.randomUUID().toString();
 
     // Register task variables and correlation message for receive tasks
-    registerReceiveTaskExecutionListener()
+    registerMessageCatchExecutionListener()
             .withTaskId(TASK_ID_RECEIVE_TASK)
             .withVariableMap(Map.of("status", "success"))
             .withCorrelationMessage(MESSAGE_NAME)
@@ -155,7 +155,7 @@ Here is a brief overview of the main classes used in the helper:
 - `BpmnTaskParseListener`: This class is the main entry point of the helper. It listens to parsing events of
   BPMN processes and adds a listener to each Receive Task, Service Task, ExclusiveGateway etc. .
 - `TaskExecutionRegistry`: This singleton class provides a method to register the expectation of a All Task.
-- `ReceiveTaskManager` : This class is responsible for managing the expectations of Receive Tasks.
+  - `ReceiveTaskManager` : This class is responsible for managing the expectations of Tasks that can receive a correlation message.
 - `CamundaExpectationUtil` : This class provides utility methods to register the expectations of tasks.
 
 By using the `TaskExecutionRegistry`, you can easily simulate the behavior of asynchronous service tasks and message tasks in your tests.
@@ -244,3 +244,7 @@ The latter profile settings will override the configuration that was set in the 
 ### 1.0.6
 - Updates Documentation
 - Specifies `legacyJobRetryBehaviorEnabled=true` property in test scope
+
+### 1.0.7
+- Makes `registerReceiveTaskExecutionListener` obsolete.
+- Adds `registerMessageCatchExecutionListener` with wider range of BPMN element types that support receiving a correlation message.

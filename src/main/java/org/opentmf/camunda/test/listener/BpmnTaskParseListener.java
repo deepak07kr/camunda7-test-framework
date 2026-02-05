@@ -183,12 +183,14 @@ public class BpmnTaskParseListener extends AbstractBpmnParseListener {
   public void parseIntermediateMessageCatchEventDefinition(
       Element messageEventDefinition, ActivityImpl activity) {
     addCustomExecutionListener(activity);
+    ReceiveTaskManager.getInstance().registerReceiveTask(activity.getId());
   }
 
   @Override
   public void parseBoundaryMessageEventDefinition(
       Element element, boolean interrupting, ActivityImpl activity) {
     addCustomExecutionListener(activity);
+    ReceiveTaskManager.getInstance().registerReceiveTask(activity.getId());
   }
 
   @Override
