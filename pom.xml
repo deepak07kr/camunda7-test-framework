@@ -50,35 +50,35 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 
-    <spring-boot.version>3.5.6</spring-boot.version>
-    <opentmf-commons.version>1.0.6</opentmf-commons.version>
+    <spring-boot.version>3.5.10</spring-boot.version>
+    <opentmf-commons.version>1.0.7</opentmf-commons.version>
 
     <camunda.version>7.24.0</camunda.version>
     <camunda-spin.version>7.24.0</camunda-spin.version>
-    <graalvm.version>25.0.0</graalvm.version>
+    <graalvm.version>25.0.2</graalvm.version>
     <camunda7-incident-logger.version>1.0.4</camunda7-incident-logger.version>
     <awaitility.version>4.2.0</awaitility.version>
     <archunit.version>1.4.1</archunit.version>
-    <testcontainers.version>1.21.3</testcontainers.version>
-    <junit-jupiter.version>5.12.2</junit-jupiter.version>
+    <testcontainers.version>1.21.4</testcontainers.version>
+    <junit-jupiter.version>5.14.2</junit-jupiter.version>
 
     <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
-    <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
-    <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+    <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
+    <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
     <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
     <maven-dependency-plugin.version>3.9.0</maven-dependency-plugin.version>
     <nexus-staging-plugin.version>1.7.0</nexus-staging-plugin.version>
-    <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+    <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
     <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
-    <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
+    <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-    <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+    <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
 
     <!-- temporarily managed dependencies -->
-    <java-uuid-generator.version>5.1.1</java-uuid-generator.version>
+    <java-uuid-generator.version>5.2.0</java-uuid-generator.version>
   </properties>
 
   <dependencyManagement>
