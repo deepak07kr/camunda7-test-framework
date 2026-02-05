@@ -202,6 +202,7 @@ camunda:
     enabled: true
     client:
       baseUrl: ....
+      disable-auto-fetching: false
 ```
 
 And your IT tests that must use this library should provide at least:
