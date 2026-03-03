@@ -4,7 +4,7 @@
   <groupId>org.opentmf.camunda</groupId>
   <artifactId>camunda7-test-framework</artifactId>
   <name>camunda7-test-framework</name>
-  <version>1.0.8</version>
+  <version>1.0.9-SNAPSHOT</version>
 
   <description>
     Makes it easy to write IT Tests for Camunda7.
@@ -425,7 +425,7 @@
     <connection>scm:git:git@github.com:opentmf/camunda7-test-framework.git</connection>
     <developerConnection>scm:git:git@github.com:opentmf/camunda7-test-framework.git
     </developerConnection>
-    <tag>camunda7-test-framework-1.0.8</tag>
+    <tag>HEAD</tag>
   </scm>
 
 </project>
