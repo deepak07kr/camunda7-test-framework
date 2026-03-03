@@ -4,6 +4,7 @@ import org.opentmf.camunda.test.helper.TaskExecutionRegistry;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import lombok.Setter;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 
@@ -47,6 +48,7 @@ import org.camunda.bpm.engine.delegate.DelegateExecution;
 public class CustomTaskExecution implements TaskExecution {
   private Map<String, Object> variableMap = new HashMap<>();
   private Runnable runnable;
+  private Consumer<DelegateExecution> executionConsumer;
 
   @Override
   public void execute(DelegateExecution execution) {
@@ -54,6 +56,12 @@ public class CustomTaskExecution implements TaskExecution {
       execution.setVariables(variableMap);
     }
 
+    // Execute consumer first (has access to execution context)
+    if (Objects.nonNull(executionConsumer)) {
+      executionConsumer.accept(execution);
+    }
+
+    // Execute runnable after (no context access)
     if (Objects.nonNull(runnable)) {
       runnable.run();
     }

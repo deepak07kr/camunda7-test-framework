@@ -79,18 +79,4 @@ public class CamundaExpectationUtil {
     return new ReceiveTaskExpectationBuilderImpl();
   }
 
-  /**
-   * Registers a task execution listener for receive tasks in Camunda BPM. This method returns a
-   * `ReceiveTaskExpectationBuilder` instance to configure the task listener with specific
-   * attributes.
-   *
-   * @return a new `ReceiveTaskExpectationBuilder` instance to configure the task listener
-   * @deprecated Use {@link #registerMessageCatchExecutionListener()} instead. This method is kept
-   *     for backward compatibility but the new method name better reflects the supported element
-   *     types (Receive Task, Message Intermediate Catch Event, Boundary Message Event).
-   */
-  @Deprecated
-  public static ReceiveTaskExpectationBuilder registerReceiveTaskExecutionListener() {
-    return registerMessageCatchExecutionListener();
-  }
 }

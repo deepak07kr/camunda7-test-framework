@@ -3,6 +3,8 @@ package org.opentmf.camunda.test.builder;
 
 
 import java.util.Map;
+import java.util.function.Consumer;
+import org.camunda.bpm.engine.delegate.DelegateExecution;
 
 /**
  * The `BaseTaskExpectationBuilder` interface serves as a flexible and extensible foundation for
@@ -34,9 +36,24 @@ import java.util.Map;
  *         <li>Return Type: A fluent reference to the builder instance.
  *       </ul>
  *   <li><b>withRunnable(Runnable runnable):</b> Configures a custom `Runnable` logic for the task
- *       that will be executed during task execution.
+ *       that will be executed during task execution. Note: Runnable does not have access to workflow
+ *       variables.
  *       <ul>
  *         <li>Parameter: `runnable` - A `Runnable` instance representing the custom logic.
+ *         <li>Return Type: A fluent reference to the builder instance.
+ *       </ul>
+ *   <li><b>withExecutionConsumer(Consumer&lt;DelegateExecution&gt; consumer):</b> Configures a custom
+ *       consumer that receives the `DelegateExecution` context, allowing access to workflow variables
+ *       and the ability to read/modify them.
+ *       <ul>
+ *         <li>Parameter: `consumer` - A `Consumer&lt;DelegateExecution&gt;` that can access and modify
+ *             workflow variables via `execution.getVariable()`, `execution.setVariable()`, etc.
+ *         <li>Return Type: A fluent reference to the builder instance.
+ *       </ul>
+ *   <li><b>withCount(int count):</b> Specifies how many times this listener should be registered.
+ *       This is useful for tasks that execute multiple times (e.g., in a loop).
+ *       <ul>
+ *         <li>Parameter: `count` - The number of times to register the listener (default is 1).
  *         <li>Return Type: A fluent reference to the builder instance.
  *       </ul>
  *   <li><b>create():</b> Finalizes the task configuration and prepares it for execution or
@@ -100,6 +117,33 @@ public interface BaseTaskExpectationBuilder<T extends BaseTaskExpectationBuilder
 
   T withRunnable(Runnable runnable);
 
+  /**
+   * Configures a consumer that receives the {@link DelegateExecution} context, allowing access to
+   * workflow variables. The consumer can read variables using {@code execution.getVariable()} and
+   * modify them using {@code execution.setVariable()}.
+   *
+   * <p>Example:
+   *
+   * <pre>{@code
+   * .withExecutionConsumer(execution -> {
+   *     String orderId = (String) execution.getVariable("orderId");
+   *     execution.setVariable("status", "processed");
+   * })
+   * }</pre>
+   *
+   * @param consumer a consumer that receives the DelegateExecution context
+   * @return a fluent reference to the builder instance
+   */
+  T withExecutionConsumer(Consumer<DelegateExecution> consumer);
+
+  /**
+   * Specifies how many times this listener should be registered. This is useful for tasks that
+   * execute multiple times (e.g., in a loop). Default is 1.
+   *
+   * @param count the number of times to register the listener
+   * @return a fluent reference to the builder instance
+   */
+  T withCount(int count);
 
   void create();
 }

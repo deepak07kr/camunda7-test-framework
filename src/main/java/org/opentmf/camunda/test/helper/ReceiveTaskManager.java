@@ -7,7 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.test.assertions.bpmn.BpmnAwareTests;
 import org.springframework.util.CollectionUtils;
@@ -105,13 +107,15 @@ public class ReceiveTaskManager {
         });
   }
 
-  public void informReceiveTask(String receiveTaskId, String processInstanceId) {
+  public void informReceiveTask(
+      String receiveTaskId, String processInstanceId, DelegateExecution execution) {
     ReceiveTaskContext context = taskContextMap.get(receiveTaskId);
     if (context == null) {
       log.warn("No context found for receiveTaskId={}. Skipping.", receiveTaskId);
       return;
     }
     context.getExecutionHelper().setProcessInstanceId(processInstanceId);
+    context.setDelegateExecution(execution);
     context.getExecutionHelper().getAtomicBoolean().set(true);
   }
 
@@ -184,7 +188,12 @@ public class ReceiveTaskManager {
       return;
     }
 
-    // 3) Execute correlation or custom logic
+    // 3) Execute execution consumer first (if present) - has access to workflow variables
+    if (expectation.getExecutionConsumer() != null) {
+      doRunExecutionConsumerExpectation(taskId, expectation, context);
+    }
+
+    // 4) Execute correlation or custom logic
     if (expectation.getRunnable() != null) {
       doRunRunnableExpectation(taskId, expectation);
     } else {
@@ -197,18 +206,37 @@ public class ReceiveTaskManager {
    *
    * <ul>
    *   <li>The {@link ReceiveTaskExecutionHelper} (holding atomic boolean and processInstanceId)
+   *   <li>The {@link DelegateExecution} context (for accessing workflow variables)
    *   <li>Any extra metadata we might need (timestamps, states, etc.)
    * </ul>
    */
   @Getter
   public static class ReceiveTaskContext {
     private final ReceiveTaskExecutionHelper executionHelper;
+    @Setter
+    private DelegateExecution delegateExecution;
 
     ReceiveTaskContext(String taskId) {
       this.executionHelper = new ReceiveTaskExecutionHelper();
       this.executionHelper.setReceiveTaskId(taskId);
       this.executionHelper.getAtomicBoolean().set(false);
     }
+  }
+
+  /**
+   * Runs a custom execution consumer from the expectation's configuration. This provides access to
+   * workflow variables via the {@link DelegateExecution} context.
+   */
+  private void doRunExecutionConsumerExpectation(
+      String taskId, ReceiveTaskExpectations expectation, ReceiveTaskContext context) {
+    DelegateExecution execution = context.getDelegateExecution();
+    if (execution == null) {
+      log.warn("DelegateExecution is null for taskId={}. Cannot execute consumer.", taskId);
+      return;
+    }
+    log.debug("Running custom ExecutionConsumer for taskId={}", taskId);
+    expectation.getExecutionConsumer().accept(execution);
+    log.info("ExecutionConsumer completed for taskId={}", taskId);
   }
 
   /** Runs a custom {@link Runnable} from the expectation's configuration. */

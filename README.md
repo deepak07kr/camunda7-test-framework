@@ -12,7 +12,7 @@ Our Camunda-7 Test Framework makes it very easy to write an integration test for
 - These listeners are just placeholders which does nothing, just lets the flow continue.
 - In your test class, you have the ability to register your own listeners for each task.
 - These registrations essentially are not real task listeners, but they are just adding lambdas to the already registered but initially empty set of tasks to be executed. They can be used to add some behavior to the flow, like setting variables, doing DB inserts, creating incidents etc.
-- A special sort of registration is also available for receive tasks. You can register a receive-task with a correlation message name and a variable map to set so that the flow will automatically continue.
+- A special sort of registration is also available for message-waiting BPMN elements (Receive Task, Message Intermediate Catch Event, Boundary Message Event). You can register such elements with a correlation message name and a variable map to set so that the flow will automatically continue.
 - After each test, these registrations will be removed implicitly, so that other tests can start with a clean state.
 - A flow is started by supplying an initial set of workflow variables.
 - Before a flow is started, you should provide your expectations for each task. An expectation can be a mock-server expectation or providing some initial data in a database table. 
@@ -59,7 +59,7 @@ The library provides an abstract base class named BaseBpmIT, which already adds 
 
 Below is a simple example of how to use the helper in your integration tests:
 
- ```java 
+```java
 import java.util.Map;
 import java.util.UUID;
 
@@ -82,11 +82,19 @@ class MyBpmFlowIT extends BaseBpmIT {
     setupYourMockServerExpectations();
     String entityId = UUID.randomUUID().toString();
 
-    // Register task variables and correlation message for receive tasks
+    // Register task variables and correlation message for message-waiting elements
+    // Supports: Receive Task, Message Intermediate Catch Event, Boundary Message Event
     registerMessageCatchExecutionListener()
             .withTaskId(TASK_ID_RECEIVE_TASK)
             .withVariableMap(Map.of("status", "success"))
             .withCorrelationMessage(MESSAGE_NAME)
+            .create();
+
+    // Use withCount() when a task executes multiple times (e.g., in a loop)
+    registerMessageCatchExecutionListener()
+            .withTaskId("loopedReceiveTask")
+            .withCorrelationMessage("LOOP_MESSAGE")
+            .withCount(3)
             .create();
 
     // Register a runnable to be executed before the task starts
@@ -94,6 +102,17 @@ class MyBpmFlowIT extends BaseBpmIT {
             .withEventType(EventType.START)
             .withTaskId(TASK_ID_SERVICE_TASK)
             .withRunnable(() -> repository.saveAndFlush(getEntity(entityId, "acknowledge")))
+            .create();
+
+    // Register an execution consumer to access workflow variables
+    registerTaskExecutionListener()
+            .withEventType(EventType.START)
+            .withTaskId("anotherServiceTask")
+            .withExecutionConsumer(execution -> {
+                String orderId = (String) execution.getVariable("orderId");
+                Integer quantity = (Integer) execution.getVariable("quantity");
+                execution.setVariable("processed", true);
+            })
             .create();
 
     // Register variables to be set after the task ends
@@ -107,7 +126,7 @@ class MyBpmFlowIT extends BaseBpmIT {
     ProcessInstance instance = startProcessInstance(PDK_SAMPLE_BPMN_FLOW,
             Map.of("orderId", "1", "orderItemId", "1"));
 
-    // Use the library method to assert the process is ended successfully 
+    // Assert that the process has ended successfully
     assertProcessEnded(instance);
   }
 
@@ -116,15 +135,18 @@ class MyBpmFlowIT extends BaseBpmIT {
     // Prepare mock server expectations for your flow
     setupYourMockServerExpectations();
 
-    // Register your task variables for your receive tasks
-    ReceiveTaskHelper.getInstance()
-            .register("myTaskId", "myMessageName", Map.of("status", "failed"));
+    // Register a message catch listener that sets a "failed" status variable
+    registerMessageCatchExecutionListener()
+            .withTaskId("myTaskId")
+            .withCorrelationMessage("myMessageName")
+            .withVariableMap(Map.of("status", "failed"))
+            .create();
 
     // Use the library method to start the process
     ProcessInstance instance = startProcessInstance("myProcessDefinitionKey",
             Map.of("orderId", "1", "orderItemId", "1"));
 
-    // Use the library method to assert the process is ended successfully 
+    // Assert that an incident was created with the expected message
     assertIncidentCreated(instance, "Wait task status is failed");
   }
 
@@ -132,20 +154,46 @@ class MyBpmFlowIT extends BaseBpmIT {
     // Setup your mockserver expectations
   }
 
-  // Example of preparing variable map
-  private Map<String, Object> prepareReceiveTaskVariables() {
-    return Map.of("status", "success");
-  }
-
-
   @Override
-  private Map<String, Object> getProcessVariables() {
+  public Map<String, Object> getStartProcessVariables() {
     return Map.of(
             "productOrderID", UUID.randomUUID().toString(),
             "productOrderItemID", UUID.randomUUID().toString());
   }
-} 
- ``` 
+}
+```
+
+### Builder Methods
+
+Both `registerTaskExecutionListener()` and `registerMessageCatchExecutionListener()` return builders with fluent APIs:
+
+#### Common Methods (both builders)
+
+| Method | Description |
+|--------|-------------|
+| `withTaskId(String taskId)` | Sets the BPMN element ID to register the listener for |
+| `withVariableMap(Map<String, Object> vars)` | Variables to set on the execution when triggered |
+| `withRunnable(Runnable runnable)` | Custom logic to execute when triggered (no access to workflow variables) |
+| `withExecutionConsumer(Consumer<DelegateExecution> consumer)` | Custom logic with access to workflow variables via `execution.getVariable()`, `execution.setVariable()`, etc. |
+| `withCount(int count)` | Number of times to register (default: 1, useful for loops) |
+| `create()` | Finalizes and registers the listener |
+
+#### `registerTaskExecutionListener()` specific
+
+| Method | Description |
+|--------|-------------|
+| `withEventType(EventType eventType)` | When to trigger: `EventType.START` or `EventType.END` |
+
+#### `registerMessageCatchExecutionListener()` specific
+
+| Method | Description |
+|--------|-------------|
+| `withCorrelationMessage(String msg)` | The message name to correlate for continuing the flow |
+
+**Supported BPMN elements for `registerMessageCatchExecutionListener()`:**
+- Receive Task
+- Message Intermediate Catch Event  
+- Boundary Message Event
 
 ### Overview of Key Classes
 
@@ -153,10 +201,10 @@ Here is a brief overview of the main classes used in the helper:
 
 - `@EnableBpmnTaskListenerPlugin`: This annotation activates the `BpmnTaskListenerPlugin` during tests.
 - `BpmnTaskParseListener`: This class is the main entry point of the helper. It listens to parsing events of
-  BPMN processes and adds a listener to each Receive Task, Service Task, ExclusiveGateway etc. .
-- `TaskExecutionRegistry`: This singleton class provides a method to register the expectation of a All Task.
-  - `ReceiveTaskManager` : This class is responsible for managing the expectations of Tasks that can receive a correlation message.
-- `CamundaExpectationUtil` : This class provides utility methods to register the expectations of tasks.
+  BPMN processes and adds a listener to each Receive Task, Service Task, ExclusiveGateway etc.
+- `TaskExecutionRegistry`: This singleton class provides a method to register the expectation of any task.
+- `ReceiveTaskManager`: This class is responsible for managing the expectations of tasks that can receive a correlation message.
+- `CamundaExpectationUtil`: This class provides utility methods to register the expectations of tasks.
 
 By using the `TaskExecutionRegistry`, you can easily simulate the behavior of asynchronous service tasks and message tasks in your tests.
 
@@ -211,40 +259,6 @@ And your IT tests that must use this library should provide at least:
 
 The latter profile settings will override the configuration that was set in the previous profiles.
 
-## Version History
+## Changelog
 
-### 1.0.0
-- Initial Version
-
-### 1.0.1
-- Updates Camunda to 7.22.0 together with related libraries.
-
-### 1.0.2
-- Updates Spring Boot to 3.4.0
-- Updates Camunda Incident Logger to 1.0.2
-
-### 1.0.3 (Backward Incompatible)
-- Updates Spring Boot to 3.4.2
-- Adds Custom Task Execution Listener for all tasks.
-- Adds `TaskExecution` interface to execute the expectation of all tasks.
-- Adds new methods to the `CamundaExpectationUtil` class.
-- Adds new Class `TaskExecutionRegistry` to manage the expectations of all tasks.
-
-### 1.0.4
-- Updates Spring Boot to 3.4.4
-- Updates Camunda to 7.23.0
-- Updates Camunda Incident Logger to 1.0.3
-- Initial open source version
-
-### 1.0.5
-- Updates Spring Boot to 3.5.6
-- Updates Camunda to 7.24.0
-- Updates Camunda Incident Logger to 1.0.4
-
-### 1.0.6
-- Updates Documentation
-- Specifies `legacyJobRetryBehaviorEnabled=true` property in test scope
-
-### 1.0.7
-- Makes `registerReceiveTaskExecutionListener` obsolete.
-- Adds `registerMessageCatchExecutionListener` with wider range of BPMN element types that support receiving a correlation message.
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.

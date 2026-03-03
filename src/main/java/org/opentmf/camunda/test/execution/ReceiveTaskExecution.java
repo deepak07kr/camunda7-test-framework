@@ -27,6 +27,9 @@ public class ReceiveTaskExecution implements TaskExecution {
   @Override
   public void execute(DelegateExecution execution) {
     ReceiveTaskManager.getInstance()
-        .informReceiveTask(execution.getCurrentActivityId(), execution.getProcessInstanceId());
+        .informReceiveTask(
+            execution.getCurrentActivityId(),
+            execution.getProcessInstanceId(),
+            execution);
   }
 }

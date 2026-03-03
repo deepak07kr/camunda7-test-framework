@@ -19,13 +19,16 @@ public class ReceiveTaskExpectationBuilderImpl
 
   @Override
   public void create() {
-    var taskExecution = new ReceiveTaskExecution();
-    TaskExecutionRegistry.getInstance().register(taskId, taskExecution);
+    for (int i = 0; i < count; i++) {
+      var taskExecution = new ReceiveTaskExecution();
+      TaskExecutionRegistry.getInstance().register(taskId, taskExecution);
 
-    var expectation = new ReceiveTaskExpectations();
-    expectation.setRunnable(customRunnable);
-    expectation.setVariableMap(variableMap);
-    expectation.setCorrelateMessage(message);
-    ReceiveTaskManager.getInstance().enqueueExpectation(taskId, expectation);
+      var expectation = new ReceiveTaskExpectations();
+      expectation.setRunnable(customRunnable);
+      expectation.setExecutionConsumer(executionConsumer);
+      expectation.setVariableMap(variableMap);
+      expectation.setCorrelateMessage(message);
+      ReceiveTaskManager.getInstance().enqueueExpectation(taskId, expectation);
+    }
   }
 }

@@ -18,13 +18,16 @@ public class TaskExpectationBuilderImpl
 
   @Override
   public void create() {
-    var taskExecution = new CustomTaskExecution();
-    taskExecution.setVariableMap(variableMap);
-    taskExecution.setRunnable(customRunnable);
-    if (eventType == null) {
-      TaskExecutionRegistry.getInstance().register(taskId, taskExecution);
-    } else {
-      TaskExecutionRegistry.getInstance().register(taskId, eventType, taskExecution);
+    for (int i = 0; i < count; i++) {
+      var taskExecution = new CustomTaskExecution();
+      taskExecution.setVariableMap(variableMap);
+      taskExecution.setRunnable(customRunnable);
+      taskExecution.setExecutionConsumer(executionConsumer);
+      if (eventType == null) {
+        TaskExecutionRegistry.getInstance().register(taskId, taskExecution);
+      } else {
+        TaskExecutionRegistry.getInstance().register(taskId, eventType, taskExecution);
+      }
     }
   }
 }
