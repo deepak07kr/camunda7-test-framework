@@ -1,17 +1,19 @@
 package org.opentmf.camunda.test.unit;
 
 
-import org.opentmf.commons.util.JacksonUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.Map;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.camunda.bpm.client.task.impl.ExternalTaskImpl;
-import org.camunda.bpm.client.variable.impl.DefaultValueMappers;
-import org.camunda.bpm.client.variable.impl.TypedValueField;
-import org.camunda.bpm.client.variable.impl.TypedValues;
-import org.camunda.bpm.client.variable.impl.ValueMappers;
-import org.camunda.bpm.client.variable.impl.format.json.JacksonJsonDataFormat;
-import org.camunda.bpm.client.variable.impl.mapper.*;
-import org.camunda.bpm.engine.variable.Variables;
+import org.cibseven.bpm.client.task.impl.ExternalTaskImpl;
+import org.cibseven.bpm.client.variable.impl.DefaultValueMappers;
+import org.cibseven.bpm.client.variable.impl.TypedValueField;
+import org.cibseven.bpm.client.variable.impl.TypedValues;
+import org.cibseven.bpm.client.variable.impl.ValueMappers;
+import org.cibseven.bpm.client.variable.impl.format.json.JacksonJsonDataFormat;
+import org.cibseven.bpm.client.variable.impl.mapper.*;
+import org.cibseven.bpm.engine.variable.Variables;
 
 /**
  * Unit tests can inherit from this class and call buildExternalTask method.
@@ -55,9 +57,12 @@ public abstract class BaseBpmUnitTest {
     mappers.addMapper(new LongValueMapper());
     mappers.addMapper(new ShortValueMapper());
     mappers.addMapper(new DoubleValueMapper());
+    var objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     mappers.addMapper(new ObjectValueMapper(
         "application/json",
-        new JacksonJsonDataFormat("json", JacksonUtil.getDefaultObjectMapper())));
+        new JacksonJsonDataFormat("json", objectMapper)));
     mappers.addMapper(new JsonValueMapper());
     return mappers;
   }

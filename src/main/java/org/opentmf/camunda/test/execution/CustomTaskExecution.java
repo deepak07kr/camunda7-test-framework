@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import lombok.Setter;
-import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.cibseven.bpm.engine.delegate.DelegateExecution;
 
 /**
  * The CustomTaskExecution class is a concrete implementation of the {@link TaskExecution}

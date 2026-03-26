@@ -1,7 +1,7 @@
 package org.opentmf.camunda.test.execution;
 
 import org.opentmf.camunda.test.helper.ReceiveTaskManager;
-import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.cibseven.bpm.engine.delegate.DelegateExecution;
 
 /**
  * The {@code ReceiveTaskExecution} class is an implementation of the {@link TaskExecution}

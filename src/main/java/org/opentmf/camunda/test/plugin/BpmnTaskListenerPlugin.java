@@ -4,9 +4,9 @@ import org.opentmf.camunda.test.listener.BpmnTaskParseListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParseListener;
-import org.camunda.bpm.engine.impl.cfg.AbstractProcessEnginePlugin;
-import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
+import org.cibseven.bpm.engine.impl.bpmn.parser.BpmnParseListener;
+import org.cibseven.bpm.engine.impl.cfg.AbstractProcessEnginePlugin;
+import org.cibseven.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.springframework.stereotype.Component;
 
 /**

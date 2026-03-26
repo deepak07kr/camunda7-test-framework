@@ -1,6 +1,6 @@
 package org.opentmf.camunda.test.execution;
 
-import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.cibseven.bpm.engine.delegate.DelegateExecution;
 
 public interface TaskExecution {
 

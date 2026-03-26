@@ -1,7 +1,7 @@
 package org.opentmf.camunda.test.util;
 
 import java.util.HashMap;
-import org.camunda.bpm.client.variable.impl.TypedValueField;
+import org.cibseven.bpm.client.variable.impl.TypedValueField;
 
 /**
  * @author Gokhan Demir
@@ -15,7 +15,7 @@ public class VariableUtil {
    * @param s The requested string value of a Camunda variable.
    * @return either the string itself or encapsulated form inside a TypedValueField.
    * @see TypedValueField
-   * @see org.camunda.spin.plugin.impl.SpinProcessEnginePlugin
+   * @see org.cibseven.spin.plugin.impl.SpinProcessEnginePlugin
    */
   public static Object stringVariable(String s) {
     if (s == null || s.length() <= 4000) {

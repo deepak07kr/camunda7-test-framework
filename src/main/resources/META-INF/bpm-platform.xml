@@ -16,7 +16,7 @@
 
     <plugins>
       <plugin>
-        <class>org.camunda.spin.plugin.impl.SpinProcessEnginePlugin</class>
+        <class>org.cibseven.spin.plugin.impl.SpinProcessEnginePlugin</class>
       </plugin>
     </plugins>
   </process-engine>

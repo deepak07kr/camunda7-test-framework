@@ -4,7 +4,7 @@ package org.opentmf.camunda.test.builder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.cibseven.bpm.engine.delegate.DelegateExecution;
 
 public abstract class AbstractTaskExpectationBuilder<T extends BaseTaskExpectationBuilder<T>>
     implements BaseTaskExpectationBuilder<T> {

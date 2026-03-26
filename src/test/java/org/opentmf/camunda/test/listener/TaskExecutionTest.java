@@ -5,7 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.cibseven.bpm.engine.delegate.DelegateExecution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

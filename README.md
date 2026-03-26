@@ -18,7 +18,7 @@ Our Camunda-7 Test Framework makes it very easy to write an integration test for
 - Before a flow is started, you should provide your expectations for each task. An expectation can be a mock-server expectation or providing some initial data in a database table. 
 - Useful methods to assert whether the test is successful or failed are provided and should be used in the final stage of the test method.
 
-> **Note:** The embedded Camunda7 server configured by the library to be used in the tests is completely identical with the `camunda7-openid-microservice` opentmf server project. 
+> **Note:** Starting with version 2.0.0, this library uses [CibSeven](https://github.com/cibseven/cibseven) (a community fork of Camunda 7) as its embedded engine. CibSeven is API-compatible with Camunda 7.24.0 and shares the same database schema and REST API. Since this is a test-scoped library, CibSeven artifacts do not affect the runtime classpath of consuming microservices.
 
 ## Usage
 
@@ -219,11 +219,11 @@ Let's consider the following two application configurations:
 Let this one be the base application configuration for your IT tests. You can specify the following Camunda related settings:
 
 ```yaml
-# starting with Camunda 7.24, this exclude became necessary
+# this exclude is necessary when the CibSeven REST auto-configuration is not needed
 spring:
   autoconfigure:
     exclude:
-    - org.camunda.bpm.spring.boot.starter.rest.CamundaBpmRestJerseyAutoConfiguration
+    - org.cibseven.bpm.spring.boot.starter.rest.CamundaBpmRestJerseyAutoConfiguration
 
 camunda:
   bpm:

@@ -4,8 +4,8 @@ import org.opentmf.camunda.test.execution.TaskExecution;
 import org.opentmf.camunda.test.helper.TaskExecutionRegistry;
 import java.util.Objects;
 import lombok.Getter;
-import org.camunda.bpm.engine.delegate.DelegateExecution;
-import org.camunda.bpm.engine.delegate.ExecutionListener;
+import org.cibseven.bpm.engine.delegate.DelegateExecution;
+import org.cibseven.bpm.engine.delegate.ExecutionListener;
 
 /**
  * The CustomTaskExecutionListener class is a listener implementation designed to act as a hook

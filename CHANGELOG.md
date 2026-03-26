@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0]
+
+### Changed
+
+- Upgrades to **Spring Boot 4.0.4** (from 3.5.11), including Spring Framework 7, Jakarta EE 11, and Hibernate 7.
+- Switches from Camunda 7 Community Edition starters to **CibSeven 2.1.0** starters. CibSeven is an actively maintained community fork of Camunda 7 with the same database schema and REST API. This change is transparent to consuming microservices and does not affect their runtime classpath.
+- Upgrades `opentmf-commons` to **2.1.0** (Jackson 3 support).
+- Upgrades `camunda7-incident-logger` to **2.0.0** (CibSeven-based).
+- Replaces `JacksonUtil.getDefaultObjectMapper()` with an inline Jackson 2 `ObjectMapper` in `BaseBpmUnitTest`, decoupling from `opentmf-commons` Jackson 3 API.
+- Migrates `@NonNull` annotation from `org.springframework.lang` to `org.jspecify.annotations` (Spring Framework 7 requirement).
+- Java source/target remains at 17.
+
+### Added
+
+- Spring Boot 3-to-4 compatibility stubs for `HibernateJpaAutoConfiguration`, `JerseyAutoConfiguration`, and `JerseyApplicationPath` so that CibSeven 2.1 auto-configuration (compiled against Boot 3.5) works on Boot 4. These stubs will be removed once CibSeven ships Boot 4 native starters.
+- `Boot4CibSevenCompatAutoConfiguration` auto-configuration class that bridges the relocated `JerseyApplicationPath` bean.
+- `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` to register the compatibility auto-configuration.
+
+### Notes
+
+- CibSeven 2.1.0 starters are compiled against Spring Boot 3.5.x. They work on Boot 4 thanks to the compatibility stubs provided by this library. Jackson 2.x (pulled transitively by the engine) coexists with Jackson 3.x on the classpath.
+
 ## [1.0.8]
 
 ### Added
@@ -88,6 +110,7 @@ All notable changes to this project will be documented in this file.
 
 - Initial Version
 
+[2.0.0]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.8...v2.0.0
 [1.0.8]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.5...v1.0.6

@@ -2,7 +2,7 @@ package org.opentmf.camunda.test.configuration;
 
 import jakarta.ws.rs.ApplicationPath;
 import java.util.logging.Level;
-import org.camunda.bpm.spring.boot.starter.rest.CamundaJerseyResourceConfig;
+import org.cibseven.bpm.spring.boot.starter.rest.CamundaJerseyResourceConfig;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.springframework.context.annotation.Configuration;
 

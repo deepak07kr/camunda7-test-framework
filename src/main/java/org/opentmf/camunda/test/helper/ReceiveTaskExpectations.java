@@ -6,7 +6,7 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.cibseven.bpm.engine.delegate.DelegateExecution;
 
 /**
  * The ReceiveTaskExpectations class is a data class that encapsulates the necessary information for

@@ -3,10 +3,10 @@ package org.opentmf.camunda.test.bpm.task;
 import org.opentmf.camunda.test.context.CustomManagementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.camunda.bpm.client.spring.annotation.ExternalTaskSubscription;
-import org.camunda.bpm.client.task.ExternalTask;
-import org.camunda.bpm.client.task.ExternalTaskHandler;
-import org.camunda.bpm.client.task.ExternalTaskService;
+import org.cibseven.bpm.client.spring.annotation.ExternalTaskSubscription;
+import org.cibseven.bpm.client.task.ExternalTask;
+import org.cibseven.bpm.client.task.ExternalTaskHandler;
+import org.cibseven.bpm.client.task.ExternalTaskService;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

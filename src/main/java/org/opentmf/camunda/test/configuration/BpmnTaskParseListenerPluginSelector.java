@@ -3,7 +3,7 @@ package org.opentmf.camunda.test.configuration;
 import org.opentmf.camunda.test.plugin.BpmnTaskListenerPlugin;
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * The ReceiveTaskParseListenerPluginSelector class uses Spring's ImportSelector interface to
