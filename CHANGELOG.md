@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2026-04-14
+
+### Changed
+
+- Add Spring Boot 4 compatibility updates for CibSeven starters: modify `Boot4CibSevenCompatAutoConfiguration` to register `CibSevenJerseyFilter` and update `JerseyApplicationPath` bean
+- enforce Java 17 in `pom.xml`.
+
 ## [2.0.0]
 
 ### Changed
@@ -110,6 +117,7 @@ All notable changes to this project will be documented in this file.
 
 - Initial Version
 
+[2.0.1]: https://github.com/opentmf/camunda7-test-framework/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.8...v2.0.0
 [1.0.8]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.6...v1.0.7

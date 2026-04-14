@@ -60,7 +60,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 
-    <spring-boot.version>4.0.4</spring-boot.version>
+    <spring-boot.version>4.0.5</spring-boot.version>
     <junit-jupiter.version>6.0.3</junit-jupiter.version>
     <opentmf-commons.version>2.1.0</opentmf-commons.version>
 
@@ -252,6 +252,9 @@
                 <requireMavenVersion>
                   <version>3.6.3</version>
                 </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>17</version>
+                </requireJavaVersion>
               </rules>
             </configuration>
           </execution>
