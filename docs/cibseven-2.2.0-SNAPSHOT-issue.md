@@ -2,6 +2,30 @@
 
 Filed upstream as <https://github.com/cibseven/cibseven/issues/339>.
 
+## Resolution (2026-05-26)
+
+The upstream maintainers clarified both issues:
+
+- **Issue 1 was a wrong-artifact problem on our side.** The plain
+  `cibseven-bpm-spring-boot-starter[-rest]` artifacts are the *Spring Boot 3*
+  starters — Boot 3 FQNs in their bytecode are expected. The Spring Boot 4
+  line ships under `-4`-suffixed artifact IDs (e.g.
+  `cibseven-bpm-spring-boot-starter-rest-4`), compiled against Spring 7 /
+  `cibseven-engine-spring-7` with the relocated FQNs. Switching to the `-4`
+  artifacts lets us drop all of our Boot 3→4 compatibility shims.
+- **Issue 2 is a real upstream POM bug.** `cibseven-engine-plugins` (the
+  parent of `cibseven-engine-plugin-spin`) declares `cibseven-engine`
+  without an explicit `<version>`, so consumers' nearest-wins resolution can
+  drag in an older 2.1.0 engine. Fix opened as
+  <https://github.com/cibseven/cibseven/issues/341>; once it lands in a
+  fresh snapshot, the issue resolves itself. Temporary workaround on the
+  consumer side: pin `cibseven-engine` to `2.2.0-SNAPSHOT` in
+  `<dependencyManagement>`.
+
+Both have been confirmed on this project's `feature/cibseven-2_2_0` branch —
+the migration now passes `mvn clean verify` end-to-end with the `-4`
+artifacts and the engine pin workaround.
+
 ## Summary
 
 The `2.2.0-SNAPSHOT` artifacts published to

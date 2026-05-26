@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2026-05-26
+
+### Changed
+
+- Switches to the CibSeven `-4`-suffixed Spring Boot 4 starter artifacts
+  (`cibseven-bpm-spring-boot-starter-rest-4` and
+  `cibseven-bpm-spring-boot-starter-external-task-client-4`) at
+  **2.2.0-SNAPSHOT**. These are compiled against Spring Boot 4 / Spring 7 /
+  `cibseven-engine-spring-7` with the relocated Spring Boot 4 FQNs, so they
+  no longer require the Boot 3→4 compatibility layer this project carried
+  in 2.0.0 / 2.0.1.
+
+### Added
+
+- `mvn-cibseven-snapshots` repository declaration in `pom.xml`, required for
+  consuming `2.2.0-SNAPSHOT` until a stable 2.2.0 is released.
+- Temporary `cibseven-engine` pin in `<dependencyManagement>` as a workaround
+  for [cibseven/cibseven#341](https://github.com/cibseven/cibseven/issues/341),
+  where `cibseven-engine-plugin-spin`'s POM lets Maven's nearest-wins
+  resolution pull an older 2.1.0 engine. Will be removed once #341 ships.
+
+### Removed
+
+- The Spring Boot 3→4 compatibility shims under `org.springframework.*`
+  (`JerseyAutoConfiguration`, `HibernateJpaAutoConfiguration`,
+  `JerseyApplicationPath`), the bridging
+  `Boot4CibSevenCompatAutoConfiguration` auto-configuration, and the
+  registering `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+  resource — all obsoleted by the CibSeven `-4` starters.
+- The `spring-boot-hibernate` direct dependency, which only existed to
+  back the Boot-3-FQN compat stub.
+
+### Notes
+
+- This release is a POC verifying that the upcoming CibSeven 2.2.0 fits
+  this framework's needs. When the stable 2.2.0 ships with #341 fixed, the
+  snapshot repository and the engine pin should be dropped.
+- Jackson 2.x is still pulled transitively by the engine; the Jackson
+  2 / Jackson 3 coexistence noted in 2.0.0 continues to apply.
+
 ## [2.0.1] - 2026-04-14
 
 ### Changed
@@ -117,6 +157,7 @@ All notable changes to this project will be documented in this file.
 
 - Initial Version
 
+[2.0.2]: https://github.com/opentmf/camunda7-test-framework/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/opentmf/camunda7-test-framework/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.8...v2.0.0
 [1.0.8]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.7...v1.0.8
