@@ -35,38 +35,43 @@ Can you inspect the project and generate an implementation plan?
 
 ---
 
-## Resolution (2026-05-26)
+## Resolution (2026-05-28)
 
 The migration is **complete on this branch as a POC** (not yet for release).
-The path turned out to differ from the original assumption in two ways:
+The key correction from the original assumption: the Boot 3 and Boot 4
+starter lines live under **different artifact IDs**, not different
+versions. The `-4`-suffixed artifacts are compiled against Spring Boot 4 /
+Spring 7 / `cibseven-engine-spring-7` with the relocated Boot 4 FQNs,
+while the plain `cibseven-bpm-spring-boot-starter[-rest|-external-task-client]`
+artifacts are the Spring Boot 3 line. See
+<https://github.com/cibseven/cibseven/issues/339> for the upstream
+confirmation.
 
-1. **Use the `-4`-suffixed starter artifact IDs**, not the original ones.
-   The plain `cibseven-bpm-spring-boot-starter[-rest|-external-task-client]`
-   artifacts are the Spring Boot 3 line, compiled against
-   `cibseven-engine-spring-6` and the Boot 3 FQNs of
-   `HibernateJpaAutoConfiguration` / `JerseyAutoConfiguration` /
-   `JerseyApplicationPath`. The `-4` variants are compiled against Spring
-   Boot 4 / Spring 7 / `cibseven-engine-spring-7` with the relocated FQNs.
-   See <https://github.com/cibseven/cibseven/issues/339> for the upstream
-   confirmation.
-2. **Pin `cibseven-engine` in `<dependencyManagement>`** as a temporary
-   workaround for <https://github.com/cibseven/cibseven/issues/341>, where
-   `cibseven-engine-plugin-spin`'s POM declares `cibseven-engine` without
-   an explicit version, letting Maven's nearest-wins resolution pull in
-   an older 2.1.0. The pin lines all transitive cibseven artifacts up at
-   2.2.0-SNAPSHOT. Remove the pin once #341 lands in a released snapshot.
+Two side issues surfaced and were resolved during the POC:
+
+- **`cibseven-engine-plugin-spin` used to drag an older engine onto the
+  classpath** because its POM declared `cibseven-engine` without an
+  explicit version. Fixed upstream in
+  <https://github.com/cibseven/cibseven/issues/341>; the latest
+  2.2.0-SNAPSHOT contains the fix, so no consumer-side workaround is
+  required.
+- **`camunda7-incident-logger:2.0.0` was on the cibseven 2.1.0 line** and
+  was transitively pulling the old engine. Bumped to
+  `2.0.1-SNAPSHOT`, which depends on cibseven 2.2.0-SNAPSHOT and brings
+  the engine in at the matching version. Both transitive paths now agree
+  on `cibseven-engine:2.2.0-SNAPSHOT` without any
+  `<dependencyManagement>` override.
 
 ### What changed in this branch
 
 - `pom.xml`:
   - Added the `mvn-cibseven-snapshots` repository.
   - Bumped `cibseven.version` to `2.2.0-SNAPSHOT`.
+  - Bumped `camunda7-incident-logger.version` to `2.0.1-SNAPSHOT`.
   - Renamed `cibseven-bpm-spring-boot-starter-rest` →
     `cibseven-bpm-spring-boot-starter-rest-4` and
     `cibseven-bpm-spring-boot-starter-external-task-client` →
     `cibseven-bpm-spring-boot-starter-external-task-client-4`.
-  - Added `cibseven-engine` to `<dependencyManagement>` (workaround for
-    #341).
   - Dropped the `spring-boot-hibernate` direct dependency (it was only
     there to back the Boot-3-FQN compat stub).
 - Deleted the Boot 3→4 compatibility layer:
@@ -85,12 +90,12 @@ branch ≥ 70%, ≤ 2 missed classes), ArchUnit tests pass.
 ### POC status
 
 This branch is not intended for release in its current form — it depends
-on `2.2.0-SNAPSHOT` artifacts and a workaround pin for #341. When CibSeven
-2.2.0 ships as a stable release with #341 fixed:
+on `2.2.0-SNAPSHOT` artifacts (both CibSeven and `camunda7-incident-logger`).
+When CibSeven 2.2.0 ships as a stable release:
 
 1. Drop the snapshot repository declaration.
-2. Drop the `cibseven-engine` pin from `<dependencyManagement>`.
-3. Bump `cibseven.version` to the stable release version.
+2. Bump `cibseven.version` and `camunda7-incident-logger.version` to the
+   stable releases.
 
 The Jackson 2 caveat from the original doc still applies — the engine
 will continue to depend on Jackson 2 for the foreseeable future.

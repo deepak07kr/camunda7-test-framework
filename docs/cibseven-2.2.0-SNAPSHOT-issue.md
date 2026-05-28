@@ -2,7 +2,7 @@
 
 Filed upstream as <https://github.com/cibseven/cibseven/issues/339>.
 
-## Resolution (2026-05-26)
+## Resolution (2026-05-28)
 
 The upstream maintainers clarified both issues:
 
@@ -13,18 +13,23 @@ The upstream maintainers clarified both issues:
   `cibseven-bpm-spring-boot-starter-rest-4`), compiled against Spring 7 /
   `cibseven-engine-spring-7` with the relocated FQNs. Switching to the `-4`
   artifacts lets us drop all of our Boot 3→4 compatibility shims.
-- **Issue 2 is a real upstream POM bug.** `cibseven-engine-plugins` (the
-  parent of `cibseven-engine-plugin-spin`) declares `cibseven-engine`
-  without an explicit `<version>`, so consumers' nearest-wins resolution can
-  drag in an older 2.1.0 engine. Fix opened as
-  <https://github.com/cibseven/cibseven/issues/341>; once it lands in a
-  fresh snapshot, the issue resolves itself. Temporary workaround on the
-  consumer side: pin `cibseven-engine` to `2.2.0-SNAPSHOT` in
-  `<dependencyManagement>`.
+- **Issue 2 was a real upstream POM bug.** `cibseven-engine-plugins` (the
+  parent of `cibseven-engine-plugin-spin`) declared `cibseven-engine`
+  without an explicit `<version>`, so consumers' nearest-wins resolution
+  could drag in an older 2.1.0 engine. **Fix shipped in
+  <https://github.com/cibseven/cibseven/issues/341> on 2026-05-26**; the
+  consumer-side `<dependencyManagement>` pin workaround is no longer
+  needed for the cibseven side.
+- **Side issue surfaced after #341.** Our own
+  `camunda7-incident-logger:2.0.0` was on the cibseven 2.1.0 line and
+  was transitively pulling the older engine. Bumped to `2.0.1-SNAPSHOT`
+  (depending on cibseven 2.2.0-SNAPSHOT); both transitive paths now
+  agree on `cibseven-engine:2.2.0-SNAPSHOT` without any
+  `<dependencyManagement>` override.
 
 Both have been confirmed on this project's `feature/cibseven-2_2_0` branch —
 the migration now passes `mvn clean verify` end-to-end with the `-4`
-artifacts and the engine pin workaround.
+artifacts and no consumer-side workaround.
 
 ## Summary
 

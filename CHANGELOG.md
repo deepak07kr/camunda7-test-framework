@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.0.2] - 2026-05-26
+## [2.0.2] - 2026-05-28
 
 ### Changed
 
@@ -13,15 +13,15 @@ All notable changes to this project will be documented in this file.
   `cibseven-engine-spring-7` with the relocated Spring Boot 4 FQNs, so they
   no longer require the Boot 3→4 compatibility layer this project carried
   in 2.0.0 / 2.0.1.
+- Bumps `camunda7-incident-logger` to **2.0.1-SNAPSHOT** so it brings
+  `cibseven-engine` at 2.2.0-SNAPSHOT transitively. The previous 2.0.0
+  release was pinned to the cibseven 2.1.0 line, which used to drag an
+  older engine onto the classpath.
 
 ### Added
 
 - `mvn-cibseven-snapshots` repository declaration in `pom.xml`, required for
   consuming `2.2.0-SNAPSHOT` until a stable 2.2.0 is released.
-- Temporary `cibseven-engine` pin in `<dependencyManagement>` as a workaround
-  for [cibseven/cibseven#341](https://github.com/cibseven/cibseven/issues/341),
-  where `cibseven-engine-plugin-spin`'s POM lets Maven's nearest-wins
-  resolution pull an older 2.1.0 engine. Will be removed once #341 ships.
 
 ### Removed
 
@@ -37,8 +37,9 @@ All notable changes to this project will be documented in this file.
 ### Notes
 
 - This release is a POC verifying that the upcoming CibSeven 2.2.0 fits
-  this framework's needs. When the stable 2.2.0 ships with #341 fixed, the
-  snapshot repository and the engine pin should be dropped.
+  this framework's needs. When the stable 2.2.0 ships, the snapshot
+  repository and the matching `camunda7-incident-logger` snapshot pin
+  should be replaced with stable versions.
 - Jackson 2.x is still pulled transitively by the engine; the Jackson
   2 / Jackson 3 coexistence noted in 2.0.0 continues to apply.
 

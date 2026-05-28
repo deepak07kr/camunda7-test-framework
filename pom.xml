@@ -66,7 +66,7 @@
 
     <cibseven.version>2.2.0-SNAPSHOT</cibseven.version>
     <graalvm.version>25.0.2</graalvm.version>
-    <camunda7-incident-logger.version>2.0.0</camunda7-incident-logger.version>
+    <camunda7-incident-logger.version>2.0.1-SNAPSHOT</camunda7-incident-logger.version>
     <awaitility.version>4.2.0</awaitility.version>
     <archunit.version>1.4.1</archunit.version>
     <testcontainers.version>1.21.4</testcontainers.version>
@@ -123,18 +123,6 @@
         <groupId>com.fasterxml.uuid</groupId>
         <artifactId>java-uuid-generator</artifactId>
         <version>${java-uuid-generator.version}</version>
-      </dependency>
-      <!--
-        Workaround for cibseven/cibseven#341: cibseven-engine-plugin-spin's POM
-        declares cibseven-engine without an explicit version, so Maven's
-        nearest-wins resolution can drag in an older 2.1.0 engine. Pin it here
-        so all transitive cibseven artifacts line up at 2.2.0-SNAPSHOT.
-        Remove once #341 is released.
-      -->
-      <dependency>
-        <groupId>org.cibseven.bpm</groupId>
-        <artifactId>cibseven-engine</artifactId>
-        <version>${cibseven.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
