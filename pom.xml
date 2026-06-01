@@ -60,23 +60,23 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 
-    <spring-boot.version>4.0.5</spring-boot.version>
-    <junit-jupiter.version>6.0.3</junit-jupiter.version>
-    <opentmf-commons.version>2.1.0</opentmf-commons.version>
+    <spring-boot.version>4.0.6</spring-boot.version>
+    <junit-jupiter.version>6.1.0</junit-jupiter.version>
+    <opentmf-commons.version>2.2.0</opentmf-commons.version>
 
     <cibseven.version>2.2.0</cibseven.version>
-    <graalvm.version>25.0.2</graalvm.version>
+    <graalvm.version>25.0.3</graalvm.version>
     <camunda7-incident-logger.version>2.0.1</camunda7-incident-logger.version>
     <awaitility.version>4.2.0</awaitility.version>
-    <archunit.version>1.4.1</archunit.version>
+    <archunit.version>1.4.2</archunit.version>
     <testcontainers.version>1.21.4</testcontainers.version>
 
-    <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
+    <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
     <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
-    <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>3.5.5</maven-failsafe-plugin.version>
-    <maven-dependency-plugin.version>3.10.0</maven-dependency-plugin.version>
+    <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
+    <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
+    <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
     <nexus-staging-plugin.version>1.7.0</nexus-staging-plugin.version>
     <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>

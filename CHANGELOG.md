@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
   the native Boot 4 line, compiled against Spring 7 /
   `cibseven-engine-spring-7` with the relocated Spring Boot 4 FQNs.
 - Upgrades `camunda7-incident-logger` to **2.0.1** (depends on CibSeven 2.2.0).
+- Updates Spring Boot to **4.0.6**.
+- Updates `opentmf-commons` to **2.2.0**.
+- Updates GraalVM JavaScript to **25.0.3**.
+- Updates JUnit Jupiter to **6.1.0**.
 
 ### Removed
 
