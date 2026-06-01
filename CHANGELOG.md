@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2026-06-01
+
+### Changed
+
+- Switches to the **CibSeven 2.2.0** `-4`-suffixed Spring Boot 4 starter
+  artifacts (`cibseven-bpm-spring-boot-starter-rest-4` and
+  `cibseven-bpm-spring-boot-starter-external-task-client-4`). These are
+  the native Boot 4 line, compiled against Spring 7 /
+  `cibseven-engine-spring-7` with the relocated Spring Boot 4 FQNs.
+- Upgrades `camunda7-incident-logger` to **2.0.1** (depends on CibSeven 2.2.0).
+
+### Removed
+
+- The Spring Boot 3→4 compatibility shims under `org.springframework.*`
+  (`JerseyAutoConfiguration`, `HibernateJpaAutoConfiguration`,
+  `JerseyApplicationPath`), the bridging
+  `Boot4CibSevenCompatAutoConfiguration` auto-configuration, and the
+  registering `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+  resource — all obsoleted by the CibSeven `-4` starters.
+- The `spring-boot-hibernate` direct dependency, which only existed to
+  back the Boot-3-FQN compat stub.
+
+### Notes
+
+- Jackson 2.x is still pulled transitively by the engine; the Jackson
+  2 / Jackson 3 coexistence noted in 2.0.0 continues to apply.
+
 ## [2.0.1] - 2026-04-14
 
 ### Changed
@@ -117,6 +144,7 @@ All notable changes to this project will be documented in this file.
 
 - Initial Version
 
+[2.0.2]: https://github.com/opentmf/camunda7-test-framework/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/opentmf/camunda7-test-framework/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.8...v2.0.0
 [1.0.8]: https://github.com/opentmf/camunda7-test-framework/compare/v1.0.7...v1.0.8
