@@ -64,9 +64,9 @@
     <junit-jupiter.version>6.0.3</junit-jupiter.version>
     <opentmf-commons.version>2.1.0</opentmf-commons.version>
 
-    <cibseven.version>2.2.0-SNAPSHOT</cibseven.version>
+    <cibseven.version>2.2.0</cibseven.version>
     <graalvm.version>25.0.2</graalvm.version>
-    <camunda7-incident-logger.version>2.0.1-SNAPSHOT</camunda7-incident-logger.version>
+    <camunda7-incident-logger.version>2.0.1</camunda7-incident-logger.version>
     <awaitility.version>4.2.0</awaitility.version>
     <archunit.version>1.4.1</archunit.version>
     <testcontainers.version>1.21.4</testcontainers.version>
@@ -89,20 +89,6 @@
     <!-- temporarily managed dependencies -->
     <java-uuid-generator.version>5.2.0</java-uuid-generator.version>
   </properties>
-
-  <repositories>
-    <repository>
-      <id>mvn-cibseven-snapshots</id>
-      <name>CIB seven Community Snapshots</name>
-      <url>https://artifacts.cibseven.org/repository/snapshots/</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 
   <dependencyManagement>
     <dependencies>

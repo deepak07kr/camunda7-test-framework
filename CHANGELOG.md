@@ -2,26 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.0.2] - 2026-05-28
+## [2.0.2] - 2026-06-01
 
 ### Changed
 
-- Switches to the CibSeven `-4`-suffixed Spring Boot 4 starter artifacts
-  (`cibseven-bpm-spring-boot-starter-rest-4` and
-  `cibseven-bpm-spring-boot-starter-external-task-client-4`) at
-  **2.2.0-SNAPSHOT**. These are compiled against Spring Boot 4 / Spring 7 /
-  `cibseven-engine-spring-7` with the relocated Spring Boot 4 FQNs, so they
-  no longer require the Boot 3→4 compatibility layer this project carried
-  in 2.0.0 / 2.0.1.
-- Bumps `camunda7-incident-logger` to **2.0.1-SNAPSHOT** so it brings
-  `cibseven-engine` at 2.2.0-SNAPSHOT transitively. The previous 2.0.0
-  release was pinned to the cibseven 2.1.0 line, which used to drag an
-  older engine onto the classpath.
-
-### Added
-
-- `mvn-cibseven-snapshots` repository declaration in `pom.xml`, required for
-  consuming `2.2.0-SNAPSHOT` until a stable 2.2.0 is released.
+- Switches to the **CibSeven 2.2.0** `-4`-suffixed Spring Boot 4 starter
+  artifacts (`cibseven-bpm-spring-boot-starter-rest-4` and
+  `cibseven-bpm-spring-boot-starter-external-task-client-4`). These are
+  the native Boot 4 line, compiled against Spring 7 /
+  `cibseven-engine-spring-7` with the relocated Spring Boot 4 FQNs.
+- Upgrades `camunda7-incident-logger` to **2.0.1** (depends on CibSeven 2.2.0).
 
 ### Removed
 
@@ -36,10 +26,6 @@ All notable changes to this project will be documented in this file.
 
 ### Notes
 
-- This release is a POC verifying that the upcoming CibSeven 2.2.0 fits
-  this framework's needs. When the stable 2.2.0 ships, the snapshot
-  repository and the matching `camunda7-incident-logger` snapshot pin
-  should be replaced with stable versions.
 - Jackson 2.x is still pulled transitively by the engine; the Jackson
   2 / Jackson 3 coexistence noted in 2.0.0 continues to apply.
 
