@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ChaosProbe" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="WF_Chaos_ExternalProbe" name="WF Chaos External Probe" isExecutable="true" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="ChaosProbeStart" name="Start">
+      <bpmn:outgoing>Flow_ToProbeTask</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_ToProbeTask" sourceRef="ChaosProbeStart" targetRef="chaosProbeTask" />
+    <bpmn:serviceTask id="chaosProbeTask" name="Chaos Probe Task" camunda:type="external" camunda:topic="chaosProbe">
+      <bpmn:incoming>Flow_ToProbeTask</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToProbeEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_ToProbeEnd" sourceRef="chaosProbeTask" targetRef="ChaosProbeEnd" />
+    <bpmn:endEvent id="ChaosProbeEnd" name="End">
+      <bpmn:incoming>Flow_ToProbeEnd</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+</bpmn:definitions>

@@ -14,6 +14,9 @@ public abstract class AbstractTaskExpectationBuilder<T extends BaseTaskExpectati
   protected Runnable customRunnable;
   protected Consumer<DelegateExecution> executionConsumer;
   protected int count = 1;
+  protected String failureMessage;
+  protected String bpmnErrorCode;
+  protected java.time.Duration delay;
 
   @SuppressWarnings("unchecked")
   @Override
@@ -52,6 +55,33 @@ public abstract class AbstractTaskExpectationBuilder<T extends BaseTaskExpectati
       throw new IllegalArgumentException("Count must be at least 1");
     }
     this.count = count;
+    return (T) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public T withFailure(String message) {
+    if (bpmnErrorCode != null) {
+      throw new IllegalStateException("An expectation fails OR raises a BPMN error, not both");
+    }
+    this.failureMessage = message;
+    return (T) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public T withBpmnError(String errorCode) {
+    if (failureMessage != null) {
+      throw new IllegalStateException("An expectation fails OR raises a BPMN error, not both");
+    }
+    this.bpmnErrorCode = errorCode;
+    return (T) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public T withDelay(java.time.Duration delay) {
+    this.delay = delay;
     return (T) this;
   }
 }

@@ -23,6 +23,9 @@ public class TaskExpectationBuilderImpl
       taskExecution.setVariableMap(variableMap);
       taskExecution.setRunnable(customRunnable);
       taskExecution.setExecutionConsumer(executionConsumer);
+      taskExecution.setFailureMessage(failureMessage);
+      taskExecution.setBpmnErrorCode(bpmnErrorCode);
+      taskExecution.setDelay(delay);
       if (eventType == null) {
         TaskExecutionRegistry.getInstance().register(taskId, taskExecution);
       } else {

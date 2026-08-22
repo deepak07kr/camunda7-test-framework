@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - unreleased
+
+### Added
+
+- **Chaos toolkit** (`org.opentmf.camunda.test.chaos`) — deterministic failure
+  simulation against the embedded engine, all behind existing extension points
+  (a Jersey filter on `/engine-rest`; disarmed it is a pass-through):
+  - `EngineOutage` — makes the engine's REST surface answer `503` while the
+    engine itself keeps running: exactly what an external-task worker sees when
+    the engine pod dies. `AutoCloseable` (try-with-resources), with selective
+    scopes (`ALL`, `FETCH_AND_LOCK`, `COMPLETION`) to cut a single leg of the
+    external-task protocol.
+  - `ExternalTaskProbe` — counts `fetchAndLock`/`complete`/`failure` attempts
+    (refused ones INCLUDED, so "the client kept polling through the outage" is
+    assertable) and exposes `queueDepth(topic)` — the number a production
+    autoscaler watches.
+  - `EngineChaosExtension` — JUnit 5 hygiene for tests not extending
+    `BaseBpmIT`: disarms outages, clears probes, resets the clock after each
+    test.
+- **`EngineClock`** (`org.opentmf.camunda.test.clock`) — jumps the engine's
+  `ClockUtil` forward so a `PT2H` timer is due in milliseconds. Forward-only by
+  design; every clock move nudges the job executor (`jobWasAdded()`) — without
+  that, an acquisition thread that computed its wake-up under the old clock
+  strands hours in the future and every later async job silently waits it out.
+- **`LockSteward`** (`org.opentmf.camunda.test.lock`) — deterministic lock
+  loss: `lockAs`/`expireLock`/`stealAs` produce the "another worker holds my
+  task now" rejection without sleeping past lock durations.
+- **Scripted task outcomes on the expectation builder** — `withFailure(message)`
+  (throws the named `SimulatedTaskFailure`, riding the engine's retry ladder
+  into an incident), `withBpmnError(code)` (drives the model's error boundary)
+  and `withDelay(duration)` (the declarative slow task). Variables and
+  consumers registered on the same expectation still apply first, so a failing
+  task can leave evidence behind.
+- **`BaseBpmIT.assertNoIncidentRaised(instance, window)`** — the negative twin
+  of `assertIncidentCreated`: the incident query must stay empty for the WHOLE
+  window (Awaitility `during`). The load-bearing assertion of chaos tests.
+- `BaseBpmIT.beforeEach` now also resets outage/probe/clock state, so chaos
+  never leaks between tests.
+
+### Changed
+
+- `assertIncidentCreated` polls every 1s instead of every 10s — an incident
+  that lands in the first second no longer costs a ten-second wait per
+  assertion.
+
 ## [2.0.2] - 2026-06-01
 
 ### Changed

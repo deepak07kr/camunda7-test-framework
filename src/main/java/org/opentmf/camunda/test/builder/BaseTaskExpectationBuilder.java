@@ -145,5 +145,26 @@ public interface BaseTaskExpectationBuilder<T extends BaseTaskExpectationBuilder
    */
   T withCount(int count);
 
+  /**
+   * Makes the expectation FAIL the activity instead of completing it: when the listener fires, a
+   * {@link org.opentmf.camunda.test.execution.SimulatedTaskFailure} is thrown with the given
+   * message. Variables and consumers registered on the same expectation are applied first, so a
+   * test can both leave evidence and blow up. Combine with {@code withCount(n)} for "fails n
+   * times"; register a plain expectation after it for "then succeeds".
+   */
+  T withFailure(String message);
+
+  /**
+   * Makes the expectation raise a BPMN error with the given code — the declarative way to drive
+   * an error boundary event in the model under test.
+   */
+  T withBpmnError(String errorCode);
+
+  /**
+   * Delays the expectation before anything else it does — the declarative slow task. Use to hold
+   * a process at an activity long enough for the test to observe an in-flight state.
+   */
+  T withDelay(java.time.Duration delay);
+
   void create();
 }
