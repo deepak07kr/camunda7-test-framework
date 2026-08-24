@@ -183,6 +183,20 @@ Both `registerTaskExecutionListener()` and `registerMessageCatchExecutionListene
 | Method | Description |
 |--------|-------------|
 | `withEventType(EventType eventType)` | When to trigger: `EventType.START` or `EventType.END` |
+| `withFailure(String message)` | Scripted failure: throws the named `SimulatedTaskFailure` when triggered. Mutually exclusive with `withBpmnError` |
+| `withBpmnError(String errorCode)` | Raises a `BpmnError` with the given code — drives the model's error boundary event. Mutually exclusive with `withFailure` |
+| `withDelay(Duration delay)` | Holds the activity for the given duration before anything else — the declarative slow task |
+
+Variables and consumers registered on the same expectation are applied BEFORE a scripted
+failure/error fires, so a failing task can still leave evidence behind for assertions.
+
+`withFailure` turns into an **incident** only when the scripted failures cover every attempt of
+an asynchronous continuation: expectations are one-shot, so under the engine's default retry
+cycle a single `withFailure` means "fails once, completes on retry". Give the activity
+`asyncBefore` with a retry cycle the failures exhaust (e.g. `R1/PT0S`), or register
+`withCount(n)` failures matching the configured retries. On a non-async activity the exception
+propagates straight to the caller (`startProcessInstance(...)`) instead of creating an incident —
+the same applies to `withDelay`, which then blocks the calling thread.
 
 #### `registerMessageCatchExecutionListener()` specific
 
@@ -194,6 +208,109 @@ Both `registerTaskExecutionListener()` and `registerMessageCatchExecutionListene
 - Receive Task
 - Message Intermediate Catch Event  
 - Boundary Message Event
+
+### Chaos Toolkit (2.1.0)
+
+Deterministic failure simulation against the embedded engine — everything sits behind the
+framework's existing extension points and is a complete pass-through until a test arms it.
+
+#### Engine outage — `EngineOutage`
+
+Makes the engine's REST surface answer `503 Service Unavailable` while the engine itself keeps
+running: exactly what an external-task worker sees when the engine pod dies, and instantly
+reversible.
+
+```java
+ProcessInstance instance;
+try (EngineOutage outage = EngineOutage.begin()) {
+    // starting bypasses REST (in-JVM RuntimeService) — only the client-facing door is dead
+    instance = startProcessInstance("WF_My_Process");
+
+    // the worker must NOT escalate while the engine is away:
+    assertNoIncidentRaised(instance, Duration.ofSeconds(5));
+}
+// the engine is "back" — the worker picks the task up and the process finishes
+assertProcessEnded(instance);
+```
+
+Selective scopes cut a single leg of the external-task protocol instead of the whole engine:
+
+| Scope | Effect |
+|-------|--------|
+| `OutageScope.ALL` (default) | Every `/engine-rest` request refused — the engine is "down" |
+| `OutageScope.FETCH_AND_LOCK` | Only the poll loop starves; everything else works |
+| `OutageScope.COMPLETION` | Fetching works, but `complete`/`failure`/`bpmnError` reports are refused — the retry-ladder scenario |
+
+Only one outage can be active at a time; a nested `begin()` fails fast. Prefer
+try-with-resources — `BaseBpmIT` and `EngineChaosExtension` also disarm leftovers between tests.
+
+#### Poll traffic and queue depth — `ExternalTaskProbe`
+
+Counts the external-task traffic reaching the REST door, **including requests an outage then
+refuses** — which is the point: "the client KEPT polling through the outage" becomes assertable.
+
+```java
+long before = ExternalTaskProbe.fetchAndLockAttempts();
+// ... outage window ...
+assertTrue(ExternalTaskProbe.fetchAndLockAttempts() > before); // the client never gave up
+assertEquals(1, ExternalTaskProbe.queueDepth("myTopic"));      // the autoscaler's number
+```
+
+#### Clock jumps — `EngineClock`
+
+Timer events, follow-up dates and retry back-offs all read the engine clock. Jump it forward and
+a `PT24H` timer is due NOW:
+
+```java
+ProcessInstance instance = startProcessInstance("WF_With_A_24h_Timer");
+EngineClock.jumpBy(Duration.ofHours(25));
+assertProcessEnded(instance);   // milliseconds, not a day
+```
+
+After a jump the clock KEEPS ADVANCING, shifted by the accumulated offset — a second timer, a
+retry back-off or a lock expiry later in the same test still sees elapsing time. When a test
+genuinely needs time to stand still, `EngineClock.freezeAt(instant)` pins the clock explicitly
+(and says so honestly): nothing time-driven progresses until the next move or `reset()`.
+
+Forward-only by design (a rewound clock confuses acquired jobs and history ordering). Every
+clock move also nudges the job executor — without that, an acquisition thread that computed its
+wake-up under the old clock strands in the future and later async jobs silently wait it out.
+
+#### Deterministic lock loss — `LockSteward`
+
+The "somebody else holds my task now" rejection without sleeping past lock durations:
+
+```java
+LockedExternalTask taskForA = LockSteward.lockAs("worker-A", "myTopic");
+LockSteward.expireLock(taskForA.getId());
+LockSteward.stealAs("worker-B", "myTopic");
+// worker-A's complete(...) is now rejected by the engine — assert your classification logic
+```
+
+#### Negative incident assertion — `BaseBpmIT.assertNoIncidentRaised`
+
+The load-bearing assertion of chaos tests: the incident query must stay empty for the WHOLE
+window (Awaitility `during`), not merely at its end.
+
+```java
+assertNoIncidentRaised(instance, Duration.ofSeconds(5));
+```
+
+#### Hygiene — `EngineChaosExtension`
+
+Tests extending `BaseBpmIT` get outage/probe/clock cleanup from its `beforeEach`. For everything
+else:
+
+```java
+@ExtendWith(EngineChaosExtension.class)
+class MyWorkerResilienceIT { ... }
+```
+
+**A note on test contexts:** if two IT classes declare different `@SpringBootTest` attributes,
+Spring boots TWO application contexts that share the same Testcontainers database (an identical
+`jdbc:tc` URL reuses the container) — and the first context's still-live job executor will race
+the second class's jobs. Declare identical attributes so the TestContext cache serves ONE
+context; the suite also gets significantly faster.
 
 ### Overview of Key Classes
 

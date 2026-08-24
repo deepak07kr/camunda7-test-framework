@@ -1,11 +1,13 @@
 package org.opentmf.camunda.test.execution;
 
 import org.opentmf.camunda.test.helper.TaskExecutionRegistry;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import lombok.Setter;
+import org.cibseven.bpm.engine.delegate.BpmnError;
 import org.cibseven.bpm.engine.delegate.DelegateExecution;
 
 /**
@@ -49,9 +51,17 @@ public class CustomTaskExecution implements TaskExecution {
   private Map<String, Object> variableMap = new HashMap<>();
   private Runnable runnable;
   private Consumer<DelegateExecution> executionConsumer;
+  private String failureMessage;
+  private String bpmnErrorCode;
+  private Duration delay;
 
   @Override
   public void execute(DelegateExecution execution) {
+    // Delay first: a "slow task" must be slow before it does anything observable.
+    if (Objects.nonNull(delay)) {
+      sleepQuietly(delay);
+    }
+
     if (!variableMap.isEmpty()) {
       execution.setVariables(variableMap);
     }
@@ -64,6 +74,24 @@ public class CustomTaskExecution implements TaskExecution {
     // Execute runnable after (no context access)
     if (Objects.nonNull(runnable)) {
       runnable.run();
+    }
+
+    // Scripted outcomes LAST: variables and consumers above still apply, so a failing
+    // expectation can leave evidence behind before it blows up.
+    if (Objects.nonNull(bpmnErrorCode)) {
+      throw new BpmnError(bpmnErrorCode);
+    }
+    if (Objects.nonNull(failureMessage)) {
+      throw new SimulatedTaskFailure(failureMessage);
+    }
+  }
+
+  private static void sleepQuietly(Duration duration) {
+    try {
+      Thread.sleep(duration.toMillis());
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new SimulatedTaskFailure("delay interrupted: " + e.getMessage());
     }
   }
 }

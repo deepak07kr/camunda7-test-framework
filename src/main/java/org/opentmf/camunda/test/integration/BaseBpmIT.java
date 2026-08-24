@@ -4,9 +4,13 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.opentmf.camunda.IncidentLoggerPlugin;
+import org.opentmf.camunda.test.chaos.EngineOutage;
+import org.opentmf.camunda.test.chaos.ExternalTaskProbe;
+import org.opentmf.camunda.test.clock.EngineClock;
 import org.opentmf.camunda.test.configuration.EnableBpmnTaskListenerPlugin;
 import org.opentmf.camunda.test.helper.ReceiveTaskManager;
 import org.opentmf.camunda.test.helper.TaskExecutionRegistry;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,6 +82,10 @@ public abstract class BaseBpmIT implements BpmIT {
     runtimeService = BpmnAwareTests.runtimeService();
     TaskExecutionRegistry.getInstance().clear();
     ReceiveTaskManager.getInstance().clear();
+    // Chaos hygiene: a leaked outage, probe count or pinned clock must never cross tests.
+    EngineOutage.reset();
+    ExternalTaskProbe.reset();
+    EngineClock.reset();
   }
 
   /**
@@ -339,7 +347,9 @@ public abstract class BaseBpmIT implements BpmIT {
       ProcessInstance processInstance, String incidentMessage) {
     List<Incident> incidents =
         await("assertIncidentCreated(" + incidentMessage + ")")
-            .pollInterval(10, TimeUnit.SECONDS)
+            // 1s poll (was 10s): an incident that lands in the first second used to still cost a
+            // 10-second wait per assertion — across a suite that is minutes of dead time.
+            .pollInterval(1, TimeUnit.SECONDS)
             .atMost(120, TimeUnit.SECONDS)
             .until(() -> this.queryIncidents(processInstance), list -> !list.isEmpty());
     assertTrue(
@@ -385,6 +395,37 @@ public abstract class BaseBpmIT implements BpmIT {
    */
   protected final void assertIncidentCreated(ProcessInstance processInstance) {
     assertIncidentCreated(processInstance, null);
+  }
+
+  /**
+   * Asserts that NO incident appears for the process instance while the given duration elapses —
+   * the negative twin of {@link #assertIncidentCreated(ProcessInstance, String)}.
+   *
+   * <p>This is the load-bearing assertion of chaos tests: a worker that survives an engine
+   * outage, a refused completion or a starved poll loop proves it precisely by NOT escalating —
+   * the process must still be incident-free when the chaos ends. Uses Awaitility's {@code
+   * during}: the incident query must stay empty for the WHOLE window, not merely at its end.
+   *
+   * <p><strong>Usage Example:</strong>
+   *
+   * <pre>{@code
+   * try (EngineOutage outage = EngineOutage.begin()) {
+   *   assertNoIncidentRaised(instance, Duration.ofSeconds(5));
+   * }
+   * }</pre>
+   *
+   * @param processInstance the {@link ProcessInstance} that must stay incident-free. Must not be
+   *     null.
+   * @param window how long the instance must remain incident-free. Choose it longer than at least
+   *     one client poll cycle, or the assertion proves nothing about the worker's behavior.
+   * @throws AssertionError if any incident appears within the window.
+   */
+  protected final void assertNoIncidentRaised(ProcessInstance processInstance, Duration window) {
+    await("assertNoIncidentRaised")
+        .pollInterval(250, TimeUnit.MILLISECONDS)
+        .during(window)
+        .atMost(window.plusSeconds(10))
+        .until(() -> queryIncidents(processInstance).isEmpty());
   }
 
   private List<Incident> queryIncidents(ProcessInstance instance) {

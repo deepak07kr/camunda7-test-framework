@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ChaosTimer" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="WF_Chaos_Timer" name="WF Chaos Timer" isExecutable="true" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="ChaosTimerStart" name="Start">
+      <bpmn:outgoing>Flow_ToTimer</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_ToTimer" sourceRef="ChaosTimerStart" targetRef="twoHourTimer" />
+    <bpmn:intermediateCatchEvent id="twoHourTimer" name="Two Hour Timer">
+      <bpmn:incoming>Flow_ToTimer</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToTimerEnd</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerDef_TwoHours">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_ToTimerEnd" sourceRef="twoHourTimer" targetRef="ChaosTimerEnd" />
+    <bpmn:endEvent id="ChaosTimerEnd" name="End">
+      <bpmn:incoming>Flow_ToTimerEnd</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+</bpmn:definitions>

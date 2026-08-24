@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ChaosScripted" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:error id="Error_Scripted" name="ScriptedFailure" errorCode="FAILED" />
+  <bpmn:process id="WF_Chaos_Scripted" name="WF Chaos Scripted" isExecutable="true" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="ScriptedStart" name="Start">
+      <bpmn:outgoing>Flow_ToScripted</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_ToScripted" sourceRef="ScriptedStart" targetRef="scriptedOutcome" />
+    <bpmn:serviceTask id="scriptedOutcome" name="Scripted Outcome" camunda:asyncBefore="true" camunda:expression="${true}">
+      <bpmn:extensionElements>
+        <camunda:failedJobRetryTimeCycle>R1/PT0S</camunda:failedJobRetryTimeCycle>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToScripted</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToScriptedOk</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="ScriptedErrorBoundary" name="Scripted Failure" attachedToRef="scriptedOutcome">
+      <bpmn:outgoing>Flow_ToScriptedFail</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorDef_Scripted" errorRef="Error_Scripted" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_ToScriptedOk" sourceRef="scriptedOutcome" targetRef="ScriptedOkEnd" />
+    <bpmn:sequenceFlow id="Flow_ToScriptedFail" sourceRef="ScriptedErrorBoundary" targetRef="ScriptedFailEnd" />
+    <bpmn:endEvent id="ScriptedOkEnd" name="Ok End">
+      <bpmn:incoming>Flow_ToScriptedOk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="ScriptedFailEnd" name="Fail End">
+      <bpmn:incoming>Flow_ToScriptedFail</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+</bpmn:definitions>

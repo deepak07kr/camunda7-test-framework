@@ -1,5 +1,6 @@
 package org.opentmf.camunda.test.configuration;
 
+import org.opentmf.camunda.test.chaos.EngineOutageFilter;
 import jakarta.ws.rs.ApplicationPath;
 import java.util.logging.Level;
 import org.cibseven.bpm.spring.boot.starter.rest.CamundaJerseyResourceConfig;
@@ -24,6 +25,9 @@ public class JerseyConfig extends CamundaJerseyResourceConfig {
   @Override
   protected void registerAdditionalResources() {
     super.registerAdditionalResources();
+
+    // The chaos valve: a no-op counter until a test arms an EngineOutage — see its javadoc.
+    register(EngineOutageFilter.class);
 
     register(LoggingFeature.class)
         .property(LoggingFeature.DEFAULT_LOGGER_LEVEL, Level.INFO.getName())
