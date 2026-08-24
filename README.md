@@ -176,19 +176,27 @@ Both `registerTaskExecutionListener()` and `registerMessageCatchExecutionListene
 | `withRunnable(Runnable runnable)` | Custom logic to execute when triggered (no access to workflow variables) |
 | `withExecutionConsumer(Consumer<DelegateExecution> consumer)` | Custom logic with access to workflow variables via `execution.getVariable()`, `execution.setVariable()`, etc. |
 | `withCount(int count)` | Number of times to register (default: 1, useful for loops) |
-| `withFailure(String message)` | Scripted failure: throws the named `SimulatedTaskFailure` when triggered — rides the engine's retry ladder into an incident. Mutually exclusive with `withBpmnError` |
-| `withBpmnError(String errorCode)` | Raises a `BpmnError` with the given code — drives the model's error boundary event. Mutually exclusive with `withFailure` |
-| `withDelay(Duration delay)` | Holds the activity for the given duration before anything else — the declarative slow task |
 | `create()` | Finalizes and registers the listener |
-
-Variables and consumers registered on the same expectation are applied BEFORE a scripted
-failure/error fires, so a failing task can still leave evidence behind for assertions.
 
 #### `registerTaskExecutionListener()` specific
 
 | Method | Description |
 |--------|-------------|
 | `withEventType(EventType eventType)` | When to trigger: `EventType.START` or `EventType.END` |
+| `withFailure(String message)` | Scripted failure: throws the named `SimulatedTaskFailure` when triggered. Mutually exclusive with `withBpmnError` |
+| `withBpmnError(String errorCode)` | Raises a `BpmnError` with the given code — drives the model's error boundary event. Mutually exclusive with `withFailure` |
+| `withDelay(Duration delay)` | Holds the activity for the given duration before anything else — the declarative slow task |
+
+Variables and consumers registered on the same expectation are applied BEFORE a scripted
+failure/error fires, so a failing task can still leave evidence behind for assertions.
+
+`withFailure` turns into an **incident** only when the scripted failures cover every attempt of
+an asynchronous continuation: expectations are one-shot, so under the engine's default retry
+cycle a single `withFailure` means "fails once, completes on retry". Give the activity
+`asyncBefore` with a retry cycle the failures exhaust (e.g. `R1/PT0S`), or register
+`withCount(n)` failures matching the configured retries. On a non-async activity the exception
+propagates straight to the caller (`startProcessInstance(...)`) instead of creating an incident —
+the same applies to `withDelay`, which then blocks the calling thread.
 
 #### `registerMessageCatchExecutionListener()` specific
 

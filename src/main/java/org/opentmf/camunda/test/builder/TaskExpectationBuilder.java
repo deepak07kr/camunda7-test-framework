@@ -1,8 +1,10 @@
 package org.opentmf.camunda.test.builder;
 
 import org.opentmf.camunda.test.execution.CustomTaskExecution;
+import org.opentmf.camunda.test.execution.SimulatedTaskFailure;
 import org.opentmf.camunda.test.helper.TaskExecutionRegistry;
 import org.opentmf.camunda.test.model.EventType;
+import java.time.Duration;
 
 /**
  * The `TaskExpectationBuilder` interface is a specialized extension of the {@link
@@ -88,4 +90,37 @@ import org.opentmf.camunda.test.model.EventType;
 public interface TaskExpectationBuilder extends BaseTaskExpectationBuilder<TaskExpectationBuilder> {
 
   TaskExpectationBuilder withEventType(EventType eventType);
+
+  /**
+   * Makes the expectation FAIL the activity instead of completing it: when the listener fires, a
+   * {@link SimulatedTaskFailure} is thrown with the given message. Variables and consumers
+   * registered on the same expectation are applied first, so a test can both leave evidence and
+   * blow up.
+   *
+   * <p>An incident only appears when the scripted failures cover EVERY attempt of an asynchronous
+   * continuation. Expectations are one-shot (consumed by the attempt that triggers them), so under
+   * the engine's default retry cycle a single {@code withFailure} means "fails once, completes on
+   * retry" — no incident. Either give the activity {@code asyncBefore} with a retry cycle the
+   * failures exhaust (e.g. {@code R1/PT0S}), or register {@code withCount(n)} failures matching
+   * the configured retries. On a NON-async activity there is no job to retry at all: the exception
+   * propagates straight to the caller ({@code startProcessInstance(...)}, a message correlation)
+   * instead of creating an incident. Register a plain expectation after a failing one for "fails,
+   * then succeeds".
+   */
+  TaskExpectationBuilder withFailure(String message);
+
+  /**
+   * Makes the expectation raise a BPMN error with the given code — the declarative way to drive an
+   * error boundary event in the model under test.
+   */
+  TaskExpectationBuilder withBpmnError(String errorCode);
+
+  /**
+   * Delays the expectation before anything else it does — the declarative slow task. Use to hold a
+   * process at an activity long enough for the test to observe an in-flight state. The delay runs
+   * in whatever thread executes the activity: on a NON-async activity that is the caller's own
+   * thread — {@code startProcessInstance(...)} itself blocks — so observing an in-flight state
+   * from the test requires an asynchronous continuation on the activity.
+   */
+  TaskExpectationBuilder withDelay(Duration delay);
 }

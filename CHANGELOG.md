@@ -29,12 +29,14 @@ All notable changes to this project will be documented in this file.
 - **`LockSteward`** (`org.opentmf.camunda.test.lock`) — deterministic lock
   loss: `lockAs`/`expireLock`/`stealAs` produce the "another worker holds my
   task now" rejection without sleeping past lock durations.
-- **Scripted task outcomes on the expectation builder** — `withFailure(message)`
-  (throws the named `SimulatedTaskFailure`, riding the engine's retry ladder
-  into an incident), `withBpmnError(code)` (drives the model's error boundary)
-  and `withDelay(duration)` (the declarative slow task). Variables and
-  consumers registered on the same expectation still apply first, so a failing
-  task can leave evidence behind.
+- **Scripted task outcomes on the task expectation builder**
+  (`registerTaskExecutionListener()` only — the receive-task builder rejects
+  them at compile time) — `withFailure(message)` (throws the named
+  `SimulatedTaskFailure`; becomes an incident when the scripted failures
+  exhaust an async continuation's retries), `withBpmnError(code)` (drives the
+  model's error boundary) and `withDelay(duration)` (the declarative slow
+  task). Variables and consumers registered on the same expectation still
+  apply first, so a failing task can leave evidence behind.
 - **`BaseBpmIT.assertNoIncidentRaised(instance, window)`** — the negative twin
   of `assertIncidentCreated`: the incident query must stay empty for the WHOLE
   window (Awaitility `during`). The load-bearing assertion of chaos tests.
