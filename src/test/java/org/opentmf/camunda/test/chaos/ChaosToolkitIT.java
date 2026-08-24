@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentmf.camunda.test.util.CamundaExpectationUtil.registerTaskExecutionListener;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.cibseven.bpm.engine.ProcessEngineException;
 import org.cibseven.bpm.engine.runtime.Job;
@@ -149,9 +150,9 @@ class ChaosToolkitIT extends BaseBpmIT {
         ProcessEngineException.class,
         () ->
             BpmnAwareTests.externalTaskService()
-                .complete(taskForA.getId(), "worker-A", java.util.Map.of()));
+                .complete(taskForA.getId(), "worker-A", Map.of()));
 
-    BpmnAwareTests.externalTaskService().complete(taskForB.getId(), "worker-B", java.util.Map.of());
+    BpmnAwareTests.externalTaskService().complete(taskForB.getId(), "worker-B", Map.of());
     assertProcessEnded(instance);
   }
 }
