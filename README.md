@@ -267,6 +267,11 @@ EngineClock.jumpBy(Duration.ofHours(25));
 assertProcessEnded(instance);   // milliseconds, not a day
 ```
 
+After a jump the clock KEEPS ADVANCING, shifted by the accumulated offset — a second timer, a
+retry back-off or a lock expiry later in the same test still sees elapsing time. When a test
+genuinely needs time to stand still, `EngineClock.freezeAt(instant)` pins the clock explicitly
+(and says so honestly): nothing time-driven progresses until the next move or `reset()`.
+
 Forward-only by design (a rewound clock confuses acquired jobs and history ordering). Every
 clock move also nudges the job executor — without that, an acquisition thread that computed its
 wake-up under the old clock strands in the future and later async jobs silently wait it out.

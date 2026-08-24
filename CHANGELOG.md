@@ -22,10 +22,14 @@ All notable changes to this project will be documented in this file.
     `BaseBpmIT`: disarms outages, clears probes, resets the clock after each
     test.
 - **`EngineClock`** (`org.opentmf.camunda.test.clock`) — jumps the engine's
-  `ClockUtil` forward so a `PT2H` timer is due in milliseconds. Forward-only by
-  design; every clock move nudges the job executor (`jobWasAdded()`) — without
-  that, an acquisition thread that computed its wake-up under the old clock
-  strands hours in the future and every later async job silently waits it out.
+  `ClockUtil` forward so a `PT2H` timer is due in milliseconds. After a jump the
+  clock keeps advancing, shifted by the accumulated offset (`ClockUtil.offset`),
+  so later timers, retry back-offs and lock expiries still see elapsing time;
+  `freezeAt(instant)` pins the clock explicitly when time must stand still.
+  Forward-only by design; every clock move nudges the job executor
+  (`jobWasAdded()`) — without that, an acquisition thread that computed its
+  wake-up under the old clock strands hours in the future and every later async
+  job silently waits it out.
 - **`LockSteward`** (`org.opentmf.camunda.test.lock`) — deterministic lock
   loss: `lockAs`/`expireLock`/`stealAs` produce the "another worker holds my
   task now" rejection without sleeping past lock durations.

@@ -22,6 +22,12 @@ import org.cibseven.bpm.engine.impl.util.ClockUtil;
  * assertProcessEnded(instance);
  * }</pre>
  *
+ * <p>After a {@link #jumpBy(Duration)} the clock KEEPS ADVANCING, shifted by the accumulated
+ * offset — a second timer, a retry back-off or a lock expiry later in the same test still sees
+ * elapsing time. When a test genuinely needs time to stand still, {@link #freezeAt(Instant)} pins
+ * the clock and says so honestly: nothing time-driven progresses until the next move or {@link
+ * #reset()}.
+ *
  * <p>The clock is engine-global, so hygiene matters more than usual: {@code BaseBpmIT} resets it
  * before each test and {@code EngineChaosExtension} after each — a jumped clock must never leak
  * into a neighbouring test. Jump forward only: the engine tolerates a rewound clock poorly
@@ -31,25 +37,43 @@ import org.cibseven.bpm.engine.impl.util.ClockUtil;
  */
 public final class EngineClock {
 
-  private static volatile boolean pinned;
+  private static long offsetMillis;
+  private static boolean frozen;
 
   private EngineClock() {}
 
-  /** Jumps the engine clock forward by the given amount. Negative jumps are refused — see class doc. */
-  public static void jumpBy(Duration amount) {
+  /**
+   * Jumps the engine clock forward by the given amount. The clock keeps advancing afterwards,
+   * shifted by the accumulated offset. On a {@link #freezeAt(Instant) frozen} clock the frozen
+   * point moves forward instead — time stays stopped. Negative jumps are refused — see class doc.
+   */
+  public static synchronized void jumpBy(Duration amount) {
     if (amount.isNegative()) {
       throw new IllegalArgumentException(
           "The engine clock only jumps FORWARD (asked for "
               + amount
               + ") — rewinding confuses acquired jobs and history ordering; reset() returns to real time");
     }
-    setTo(now().plus(amount));
+    if (frozen) {
+      ClockUtil.setCurrentTime(Date.from(now().plus(amount)));
+    } else {
+      offsetMillis += amount.toMillis();
+      ClockUtil.offset(offsetMillis);
+    }
+    wakeJobExecutor();
   }
 
-  /** Pins the engine clock to the given instant (forward of real time or not — caller's call). */
-  public static void setTo(Instant instant) {
+  /**
+   * FREEZES the engine clock at the given instant: time stands still — no timer fires, no
+   * back-off elapses, no lock expires — until the next {@link #jumpBy(Duration)} (which moves the
+   * frozen point) or {@link #reset()}. The instant may lie in the past — rewinding confuses the
+   * engine (see class doc), so that is the caller's deliberate call. For "skip ahead but keep
+   * time flowing", use {@link #jumpBy(Duration)} instead.
+   */
+  public static synchronized void freezeAt(Instant instant) {
     ClockUtil.setCurrentTime(Date.from(instant));
-    pinned = true;
+    offsetMillis = 0;
+    frozen = true;
     wakeJobExecutor();
   }
 
@@ -58,15 +82,16 @@ public final class EngineClock {
     return ClockUtil.getCurrentTime().toInstant();
   }
 
-  /** Whether the clock is currently pinned/jumped rather than following real time. */
-  public static boolean isPinned() {
-    return pinned;
+  /** Whether the clock is currently jumped or frozen rather than following real time. */
+  public static synchronized boolean isPinned() {
+    return frozen || offsetMillis != 0;
   }
 
   /** Returns the engine to real time. Test-hygiene hook; called by the framework between tests. */
-  public static void reset() {
+  public static synchronized void reset() {
     ClockUtil.reset();
-    pinned = false;
+    offsetMillis = 0;
+    frozen = false;
     wakeJobExecutor();
   }
 
