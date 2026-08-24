@@ -46,6 +46,11 @@ All notable changes to this project will be documented in this file.
 - `assertIncidentCreated` polls every 1s instead of every 10s — an incident
   that lands in the first second no longer costs a ten-second wait per
   assertion.
+- The `maven-enforcer-plugin` now pins the build toolchain to **Java 17.x** and
+  **Maven 3.9.x** instead of accepting those versions as open-ended minimums.
+  On JDK 23 and newer, javac disables implicit annotation processing, so Lombok
+  silently stops running and the build fails with dozens of misleading "cannot
+  find symbol" errors; the enforcer now names the real cause up front.
 
 ## [2.0.2] - 2026-06-01
 

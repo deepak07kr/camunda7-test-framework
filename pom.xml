@@ -245,10 +245,12 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>3.6.3</version>
+                  <version>[3.9,3.10)</version>
+                  <message>This project builds with Maven 3.9.x only. Switch your Maven before building.</message>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>17</version>
+                  <version>[17,18)</version>
+                  <message>This project builds with Java 17.x only. On JDK 23+ javac disables implicit annotation processing, so Lombok never runs and the build fails with dozens of misleading "cannot find symbol" errors. Point JAVA_HOME at a 17.x JDK.</message>
                 </requireJavaVersion>
               </rules>
             </configuration>
